@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Activity,
   ArrowUp,
@@ -40,6 +41,12 @@ const modes: Array<{ id: Mode; label: string; icon: typeof Bot; hint: string }> 
   { id: "economy", label: "Economía", icon: BarChart3, hint: "Canasta, dólar, inflación, rubros y mercado" },
 ];
 
+const routeByMode: Record<Mode, string> = {
+  assistant: "/asistente",
+  auditor: "/auditor",
+  economy: "/economia",
+};
+
 const starterPrompts = ["Formalizar empresa", "Consultar IPS", "Buscar en webs del gobierno", "Analizar noticias", "Conviene comprar dólares", "Subir licitación PDF"];
 
 const demoDocs = [
@@ -54,6 +61,12 @@ const marketRows = [
   { label: "Inflación estimada", value: "4.1%", trend: "estable" },
   { label: "Rubros con margen", value: "alimentos, logística", trend: "30/90 días" },
 ];
+
+const getModeFromPath = (pathname: string): Mode => {
+  if (pathname.includes("auditor")) return "auditor";
+  if (pathname.includes("economia")) return "economy";
+  return "assistant";
+};
 
 const Index = () => {
   const [mode, setMode] = useState<Mode>("assistant");
