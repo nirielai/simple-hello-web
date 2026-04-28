@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      canasta_basica: {
+        Row: {
+          categoria: string
+          fuente: string | null
+          id: string
+          precio_actual: number
+          precio_anterior: number
+          producto: string
+          unidad: string
+          updated_at: string
+          variacion_pct: number | null
+        }
+        Insert: {
+          categoria: string
+          fuente?: string | null
+          id?: string
+          precio_actual: number
+          precio_anterior: number
+          producto: string
+          unidad: string
+          updated_at?: string
+          variacion_pct?: number | null
+        }
+        Update: {
+          categoria?: string
+          fuente?: string | null
+          id?: string
+          precio_actual?: number
+          precio_anterior?: number
+          producto?: string
+          unidad?: string
+          updated_at?: string
+          variacion_pct?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
