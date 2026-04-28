@@ -107,7 +107,32 @@ export default function EconomyView() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+    <PyOsLayout>
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+      <div className="mb-8 text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent">
+          <BarChart3 className="h-6 w-6 text-primary" />
+        </div>
+        <h1 className="font-serif text-2xl sm:text-3xl">Inteligencia económica Paraguay</h1>
+        <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
+          Cotización referencial del Banco Central del Paraguay en vivo. Asesor IA con tu perfil y los datos del día.
+        </p>
+      </div>
+
+      {/* Cards de tasas */}
+      <section className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        {(eco?.rates.slice(0, 4) || Array(4).fill(null)).map((r, i) => (
+          <div key={i} className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase text-muted-foreground">{r?.code || "—"}</span>
+              <TrendingUp className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <p className="mt-1 truncate text-sm text-muted-foreground">{r?.name || "Cargando..."}</p>
+            <p className="mt-2 font-serif text-xl sm:text-2xl">{fmt(r?.sell ?? null)}</p>
+            <p className="text-xs text-muted-foreground">compra {fmt(r?.buy ?? null)}</p>
+          </div>
+        ))}
+      </section>
       <div className="mb-8 text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent">
           <BarChart3 className="h-6 w-6 text-primary" />
@@ -213,5 +238,6 @@ export default function EconomyView() {
         )}
       </section>
     </div>
+    </PyOsLayout>
   );
 }
