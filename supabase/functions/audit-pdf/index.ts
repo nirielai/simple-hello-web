@@ -58,8 +58,16 @@ Deno.serve(async (req) => {
     if (ct.includes("application/json")) {
       const { url } = await req.json();
       if (!url) throw new Error("url requerida");
-      const r = await fetch(url, { signal: AbortSignal.timeout(20000) });
-      if (!r.ok) throw new Error(`No se pudo descargar (${r.status})`);
+      const r = await fetch(url, {
+        signal: AbortSignal.timeout(20000),
+        headers: {
+          "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+          "Accept": "application/pdf,*/*",
+          "Accept-Language": "es-PY,es;q=0.9,en;q=0.5",
+        },
+        redirect: "follow",
+      });
+      if (!r.ok) throw new Error(`No se pudo descargar (${r.status}). Probá subiendo el PDF directamente.`);
       bytes = new Uint8Array(await r.arrayBuffer());
       filename = url.split("/").pop() || filename;
     } else {
