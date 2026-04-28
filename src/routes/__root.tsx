@@ -29,11 +29,11 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "PY-OS · Inteligencia Soberana 🇵🇾" },
+      { name: "description", content: "Asistente, auditor de PDFs públicos y panel económico de Paraguay con datos en vivo del Banco Central." },
+      { name: "author", content: "PY-OS" },
+      { property: "og:title", content: "PY-OS · Inteligencia Soberana 🇵🇾" },
+      { property: "og:description", content: "Trámites, auditoría y economía paraguaya en tiempo real." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
@@ -42,6 +42,10 @@ export const Route = createRootRoute({
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap",
       },
     ],
   }),
