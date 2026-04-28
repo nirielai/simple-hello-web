@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Activity,
   ArrowUp,
@@ -40,6 +41,12 @@ const modes: Array<{ id: Mode; label: string; icon: typeof Bot; hint: string }> 
   { id: "economy", label: "Economía", icon: BarChart3, hint: "Canasta, dólar, inflación, rubros y mercado" },
 ];
 
+const routeByMode: Record<Mode, string> = {
+  assistant: "/asistente",
+  auditor: "/auditor",
+  economy: "/economia",
+};
+
 const starterPrompts = ["Formalizar empresa", "Consultar IPS", "Buscar en webs del gobierno", "Analizar noticias", "Conviene comprar dólares", "Subir licitación PDF"];
 
 const demoDocs = [
@@ -55,8 +62,16 @@ const marketRows = [
   { label: "Rubros con margen", value: "alimentos, logística", trend: "30/90 días" },
 ];
 
+const getModeFromPath = (pathname: string): Mode => {
+  if (pathname.includes("auditor")) return "auditor";
+  if (pathname.includes("economia")) return "economy";
+  return "assistant";
+};
+
 const Index = () => {
-  const [mode, setMode] = useState<Mode>("assistant");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const mode = getModeFromPath(location.pathname);
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -69,6 +84,8 @@ const Index = () => {
     setFiles((current) => [...current, ...selected]);
     event.target.value = "";
   };
+
+  const goToMode = (nextMode: Mode) => navigate(routeByMode[nextMode]);
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -92,7 +109,7 @@ const Index = () => {
                     return (
                       <button
                         key={item.id}
-                        onClick={() => setMode(item.id)}
+                        onClick={() => goToMode(item.id)}
                         className={cn(
                           "flex items-start gap-3 rounded-lg border border-transparent p-3 text-left transition hover:bg-accent",
                           mode === item.id && "border-border bg-surface shadow-soft",
@@ -123,7 +140,35 @@ const Index = () => {
         </div>
       </header>
 
-      <section className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[1fr_320px]">
+      <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[280px_1fr]">
+        <aside className="hidden rounded-xl border border-border bg-card p-4 shadow-soft lg:block">
+          <p className="mb-4 text-xs font-semibold uppercase text-muted-foreground">Secciones</p>
+          <div className="grid gap-2">
+            {modes.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.id}
+                  to={routeByMode[item.id]}
+                  className={cn(
+                    "flex items-start gap-3 rounded-lg border p-3 text-left transition",
+                    mode === item.id ? "border-primary bg-accent text-accent-foreground" : "border-border bg-background hover:bg-surface",
+                  )}
+                >
+                  <Icon className="mt-0.5 h-5 w-5 text-primary" />
+                  <span>
+                    <span className="block text-sm font-semibold">{item.label}</span>
+                    <span className="text-xs text-muted-foreground">{item.hint}</span>
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+          <div className="mt-6 rounded-lg border border-border bg-surface/70 p-4 text-xs text-muted-foreground">
+            Cada sección tiene foco propio. Auditoría y economía quedan preparadas para conectar fuentes en vivo vía Lovable Cloud.
+          </div>
+        </aside>
+
         <div className="flex min-h-[calc(100vh-7rem)] flex-col rounded-xl border border-border bg-card shadow-soft">
           <div className="border-b border-border p-4 sm:p-5">
             <div className="flex flex-wrap items-center gap-2">
@@ -132,7 +177,7 @@ const Index = () => {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setMode(item.id)}
+                    onClick={() => goToMode(item.id)}
                     className={cn(
                       "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium transition",
                       mode === item.id
@@ -154,8 +199,16 @@ const Index = () => {
                 <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface">
                   <ActiveIcon className="h-6 w-6 text-primary" />
                 </div>
-                <h1 className="text-3xl font-medium leading-tight sm:text-5xl">Mba&apos;éichapa, ¿en qué te ayudo?</h1>
-                <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">{activeMode.hint}. Puedo preparar búsquedas en sitios públicos, leer archivos cargados, consultar noticias y estructurar análisis para el MVP.</p>
+                <h1 className="text-3xl font-medium leading-tight sm:text-5xl">
+                  {mode === "assistant" && "Asistente ciudadano"}
+                  {mode === "auditor" && "Auditor público en vivo"}
+                  {mode === "economy" && "Inteligencia económica Paraguay"}
+                </h1>
+                <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+                  {mode === "assistant" && "Chat propio para consultas en español, guaraní o jopara, con archivos adjuntos, búsqueda web y voz preparada."}
+                  {mode === "auditor" && "Sección enfocada en leer PDFs y URLs del gobierno, detectar cambios, extraer montos, partes, plazos y riesgo documental."}
+                  {mode === "economy" && "Panel avanzado para datos económicos paraguayos, noticias, tipo de cambio, canasta, rubros y proyecciones actualizables."}
+                </p>
               </div>
 
               <div className="flex flex-wrap justify-center gap-2">
@@ -219,7 +272,7 @@ const Index = () => {
           </div>
         </div>
 
-        <aside className="grid content-start gap-4">
+        <div className="grid gap-4 md:grid-cols-3">
           <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
             <div className="mb-3 flex items-center gap-2">
               <Search className="h-4 w-4 text-primary" />
@@ -264,7 +317,7 @@ const Index = () => {
               ))}
             </div>
           </section>
-        </aside>
+        </div>
       </section>
     </main>
   );
