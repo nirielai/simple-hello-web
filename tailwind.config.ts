@@ -57,6 +57,22 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        surface: {
+          DEFAULT: "hsl(var(--surface))",
+          soft: "hsl(var(--surface-soft))",
+        },
+        risk: {
+          low: "hsl(var(--risk-low))",
+          medium: "hsl(var(--risk-medium))",
+          high: "hsl(var(--risk-high))",
+        },
+        paraguay: {
+          blue: "hsl(var(--paraguay-blue))",
+          red: "hsl(var(--paraguay-red))",
+        },
+      },
+      boxShadow: {
+        soft: "var(--shadow-soft)",
       },
       borderRadius: {
         lg: "var(--radius)",
