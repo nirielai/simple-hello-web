@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import PyOsLayout from "@/components/layout/PyOsLayout";
 import AssistantView from "@/components/assistant/AssistantView";
 
 export const Route = createFileRoute("/asistente")({
@@ -9,5 +8,5 @@ export const Route = createFileRoute("/asistente")({
       { name: "description", content: "Chat propio para trámites en Paraguay: IPS, MEC, SET, cédula, formalización. En español, guaraní y jopara." },
     ],
   }),
-  component: () => <PyOsLayout><AssistantView /></PyOsLayout>,
+  component: AssistantView,
 });
