@@ -199,8 +199,16 @@ const Index = () => {
                 <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface">
                   <ActiveIcon className="h-6 w-6 text-primary" />
                 </div>
-                <h1 className="text-3xl font-medium leading-tight sm:text-5xl">Mba&apos;éichapa, ¿en qué te ayudo?</h1>
-                <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">{activeMode.hint}. Puedo preparar búsquedas en sitios públicos, leer archivos cargados, consultar noticias y estructurar análisis para el MVP.</p>
+                <h1 className="text-3xl font-medium leading-tight sm:text-5xl">
+                  {mode === "assistant" && "Asistente ciudadano"}
+                  {mode === "auditor" && "Auditor público en vivo"}
+                  {mode === "economy" && "Inteligencia económica Paraguay"}
+                </h1>
+                <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+                  {mode === "assistant" && "Chat propio para consultas en español, guaraní o jopara, con archivos adjuntos, búsqueda web y voz preparada."}
+                  {mode === "auditor" && "Sección enfocada en leer PDFs y URLs del gobierno, detectar cambios, extraer montos, partes, plazos y riesgo documental."}
+                  {mode === "economy" && "Panel avanzado para datos económicos paraguayos, noticias, tipo de cambio, canasta, rubros y proyecciones actualizables."}
+                </p>
               </div>
 
               <div className="flex flex-wrap justify-center gap-2">
