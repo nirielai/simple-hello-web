@@ -13,27 +13,15 @@ export default {
       },
     },
     extend: {
-      fontFamily: {
-        serif: ["Source Serif 4", "Georgia", "serif"],
-        sans: ["Inter", "system-ui", "sans-serif"],
-      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        surface: {
-          DEFAULT: "hsl(var(--surface))",
-          foreground: "hsl(var(--surface-foreground))",
-        },
-        success: "hsl(var(--success))",
-        warning: "hsl(var(--warning))",
-        danger: "hsl(var(--danger))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
-          soft: "hsl(var(--primary-soft))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -69,6 +57,22 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        surface: {
+          DEFAULT: "hsl(var(--surface))",
+          soft: "hsl(var(--surface-soft))",
+        },
+        risk: {
+          low: "hsl(var(--risk-low))",
+          medium: "hsl(var(--risk-medium))",
+          high: "hsl(var(--risk-high))",
+        },
+        paraguay: {
+          blue: "hsl(var(--paraguay-blue))",
+          red: "hsl(var(--paraguay-red))",
+        },
+      },
+      boxShadow: {
+        soft: "var(--shadow-soft)",
       },
       borderRadius: {
         lg: "var(--radius)",

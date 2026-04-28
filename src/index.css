@@ -1,95 +1,105 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* PY-OS Design System — Anthropic / Claude inspired
-   Warm cream background, terracotta accent, serif headings.
-   All colors are HSL.
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    /* Crema cálido como Claude */
-    --background: 39 38% 95%;          /* #F5F1EB */
-    --foreground: 25 18% 16%;          /* texto cálido oscuro */
+    --background: 42 36% 96%;
+    --foreground: 24 18% 14%;
 
-    --surface: 40 50% 97%;             /* #FAF9F5 superficies */
-    --surface-foreground: 25 18% 16%;
+    --card: 42 45% 98%;
+    --card-foreground: 24 18% 14%;
 
-    --card: 40 50% 97%;
-    --card-foreground: 25 18% 16%;
+    --popover: 42 45% 98%;
+    --popover-foreground: 24 18% 14%;
 
-    --popover: 40 50% 98%;
-    --popover-foreground: 25 18% 16%;
+    --primary: 14 50% 58%;
+    --primary-foreground: 42 45% 98%;
 
-    /* Terracota Claude */
-    --primary: 16 50% 58%;             /* #CC785C */
-    --primary-foreground: 40 50% 98%;
-    --primary-soft: 16 60% 92%;
+    --secondary: 35 30% 90%;
+    --secondary-foreground: 24 18% 18%;
 
-    --secondary: 35 25% 88%;
-    --secondary-foreground: 25 18% 16%;
+    --muted: 38 24% 88%;
+    --muted-foreground: 25 10% 42%;
 
-    --muted: 35 22% 90%;
-    --muted-foreground: 25 10% 40%;
+    --accent: 14 48% 92%;
+    --accent-foreground: 14 42% 30%;
 
-    --accent: 16 50% 58%;
-    --accent-foreground: 40 50% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --destructive: 0 65% 50%;
-    --destructive-foreground: 40 50% 98%;
+    --border: 32 20% 82%;
+    --input: 32 20% 82%;
+    --ring: 14 50% 58%;
 
-    --success: 142 45% 38%;
-    --warning: 38 85% 50%;
-    --danger: 0 70% 50%;
+    --radius: 0.75rem;
 
-    --border: 30 15% 84%;
-    --input: 30 15% 84%;
-    --ring: 16 50% 58%;
+    --surface: 42 43% 94%;
+    --surface-soft: 39 38% 91%;
+    --risk-low: 151 34% 37%;
+    --risk-medium: 37 73% 48%;
+    --risk-high: 3 61% 53%;
+    --paraguay-blue: 219 57% 38%;
+    --paraguay-red: 350 62% 48%;
+    --shadow-soft: 0 18px 60px -36px hsl(24 18% 14% / 0.35);
 
-    --radius: 0.875rem;
+    --sidebar-background: 0 0% 98%;
 
-    --font-serif: 'Source Serif 4', Georgia, serif;
-    --font-sans: 'Inter', system-ui, sans-serif;
+    --sidebar-foreground: 240 5.3% 26.1%;
 
-    --shadow-soft: 0 1px 2px hsl(25 18% 16% / 0.04), 0 4px 16px hsl(25 18% 16% / 0.04);
-    --shadow-elevated: 0 2px 4px hsl(25 18% 16% / 0.06), 0 12px 32px hsl(25 18% 16% / 0.08);
+    --sidebar-primary: 240 5.9% 10%;
 
-    --sidebar-background: 39 38% 95%;
-    --sidebar-foreground: 25 18% 16%;
-    --sidebar-primary: 16 50% 58%;
-    --sidebar-primary-foreground: 40 50% 98%;
-    --sidebar-accent: 35 25% 88%;
-    --sidebar-accent-foreground: 25 18% 16%;
-    --sidebar-border: 30 15% 84%;
-    --sidebar-ring: 16 50% 58%;
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 25 15% 10%;
-    --foreground: 40 30% 92%;
-    --surface: 25 14% 13%;
-    --surface-foreground: 40 30% 92%;
-    --card: 25 14% 13%;
-    --card-foreground: 40 30% 92%;
-    --popover: 25 14% 13%;
-    --popover-foreground: 40 30% 92%;
-    --primary: 16 60% 62%;
-    --primary-foreground: 25 15% 10%;
-    --primary-soft: 16 30% 22%;
-    --secondary: 25 12% 18%;
-    --secondary-foreground: 40 30% 92%;
-    --muted: 25 10% 18%;
-    --muted-foreground: 35 12% 65%;
-    --accent: 16 60% 62%;
-    --accent-foreground: 25 15% 10%;
-    --destructive: 0 60% 50%;
-    --destructive-foreground: 40 30% 92%;
-    --border: 25 10% 22%;
-    --input: 25 10% 22%;
-    --ring: 16 60% 62%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -98,60 +108,16 @@
     @apply border-border;
   }
 
-  html, body {
+  body {
     @apply bg-background text-foreground;
-    font-family: var(--font-sans);
-    font-feature-settings: 'cv11', 'ss01';
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    letter-spacing: 0;
   }
 
-  h1, h2, h3, .serif {
-    font-family: var(--font-serif);
-    font-weight: 500;
-    letter-spacing: -0.01em;
+  h1,
+  h2,
+  h3 {
+    font-family: Fraunces, "Source Serif 4", Georgia, ui-serif, serif;
+    letter-spacing: 0;
   }
-}
-
-@layer components {
-  .py-card {
-    @apply rounded-2xl bg-[hsl(var(--surface))] border border-border;
-    box-shadow: var(--shadow-soft);
-  }
-
-  .py-input {
-    @apply rounded-2xl bg-[hsl(var(--surface))] border border-border px-5 py-4 outline-none
-           focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-all;
-    box-shadow: var(--shadow-soft);
-  }
-
-  .prose-claude {
-    @apply text-foreground leading-relaxed;
-  }
-  .prose-claude h1 { @apply serif text-3xl mt-6 mb-3; }
-  .prose-claude h2 { @apply serif text-2xl mt-5 mb-2; }
-  .prose-claude h3 { @apply serif text-xl mt-4 mb-2; }
-  .prose-claude p  { @apply my-3; }
-  .prose-claude ul { @apply list-disc pl-6 my-3 space-y-1; }
-  .prose-claude ol { @apply list-decimal pl-6 my-3 space-y-1; }
-  .prose-claude code {
-    @apply px-1.5 py-0.5 rounded-md bg-muted text-[0.9em] font-mono;
-  }
-  .prose-claude pre {
-    @apply rounded-xl bg-[hsl(25_18%_12%)] text-[hsl(40_30%_92%)] p-4 my-3 overflow-x-auto text-sm;
-  }
-  .prose-claude pre code { @apply bg-transparent p-0; }
-  .prose-claude blockquote {
-    @apply border-l-2 border-primary/50 pl-4 italic text-muted-foreground my-3;
-  }
-  .prose-claude a { @apply text-primary underline underline-offset-2; }
-  .prose-claude table { @apply w-full my-4 border-collapse; }
-  .prose-claude th, .prose-claude td {
-    @apply border border-border px-3 py-2 text-left;
-  }
-  .prose-claude th { @apply bg-muted font-semibold; }
-}
-
-@layer utilities {
-  .text-balance { text-wrap: balance; }
 }
