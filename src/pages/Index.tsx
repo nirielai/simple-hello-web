@@ -140,7 +140,35 @@ const Index = () => {
         </div>
       </header>
 
-      <section className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[1fr_320px]">
+      <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[280px_1fr]">
+        <aside className="hidden rounded-xl border border-border bg-card p-4 shadow-soft lg:block">
+          <p className="mb-4 text-xs font-semibold uppercase text-muted-foreground">Secciones</p>
+          <div className="grid gap-2">
+            {modes.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.id}
+                  to={routeByMode[item.id]}
+                  className={cn(
+                    "flex items-start gap-3 rounded-lg border p-3 text-left transition",
+                    mode === item.id ? "border-primary bg-accent text-accent-foreground" : "border-border bg-background hover:bg-surface",
+                  )}
+                >
+                  <Icon className="mt-0.5 h-5 w-5 text-primary" />
+                  <span>
+                    <span className="block text-sm font-semibold">{item.label}</span>
+                    <span className="text-xs text-muted-foreground">{item.hint}</span>
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+          <div className="mt-6 rounded-lg border border-border bg-surface/70 p-4 text-xs text-muted-foreground">
+            Cada sección tiene foco propio. Auditoría y economía quedan preparadas para conectar fuentes en vivo vía Lovable Cloud.
+          </div>
+        </aside>
+
         <div className="flex min-h-[calc(100vh-7rem)] flex-col rounded-xl border border-border bg-card shadow-soft">
           <div className="border-b border-border p-4 sm:p-5">
             <div className="flex flex-wrap items-center gap-2">
@@ -236,7 +264,7 @@ const Index = () => {
           </div>
         </div>
 
-        <aside className="grid content-start gap-4">
+        <div className="grid gap-4 md:grid-cols-3">
           <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
             <div className="mb-3 flex items-center gap-2">
               <Search className="h-4 w-4 text-primary" />
@@ -281,7 +309,7 @@ const Index = () => {
               ))}
             </div>
           </section>
-        </aside>
+        </div>
       </section>
     </main>
   );
