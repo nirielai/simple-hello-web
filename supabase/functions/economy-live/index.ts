@@ -1,62 +1,72 @@
-// Datos económicos en vivo del BCP + canasta + asesor IA streaming
-import { extractText, getDocumentProxy } from "https://esm.sh/unpdf@1.6.1";
-
+// Datos económicos en vivo Paraguay - APIs públicas (BCP via dolarpy + er-api)
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const BCP_INDEX = "https://www.bcp.gov.py/cotizacion-referencial-en-guaranies-i365";
-const KNOWN: Record<string, string> = {
-  USD: "Dólar EE.UU.", EUR: "Euro", BRL: "Real", ARS: "Peso argentino",
-  GBP: "Libra", JPY: "Yen", CHF: "Franco suizo", CLP: "Peso chileno", UYU: "Peso uruguayo",
+const NAMES: Record<string, string> = {
+  USD: "Dólar EE.UU.", EUR: "Euro", BRL: "Real brasileño", ARS: "Peso argentino",
+  GBP: "Libra esterlina", JPY: "Yen", CHF: "Franco suizo", CLP: "Peso chileno", UYU: "Peso uruguayo",
 };
 
-function parseNum(s: string): number | null {
-  if (!s) return null;
-  const c = s.replace(/\./g, "").replace(",", ".").replace(/[^0-9.\-]/g, "");
-  const n = Number(c);
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
+type Rate = { code: string; name: string; buy: number | null; sell: number | null };
 
-function parseRates(text: string) {
-  const rates: Array<{ code: string; name: string; buy: number | null; sell: number | null }> = [];
-  for (const line of text.split(/\r?\n+/)) {
-    for (const [code, name] of Object.entries(KNOWN)) {
-      const m = line.match(new RegExp(`\\b${code}\\b.*?([0-9][0-9\\.,]{2,})\\s+([0-9][0-9\\.,]{2,})`, "i"));
-      if (m && !rates.find((r) => r.code === code)) {
-        const buy = parseNum(m[1]); const sell = parseNum(m[2]);
-        if (buy && sell) rates.push({ code, name, buy, sell });
+async function getRates(): Promise<{ rates: Rate[]; pdfUrl: string; source: string; houses?: any }> {
+  const rates: Rate[] = [];
+  let usdMid = 7300; // fallback razonable
+  let houses: any = {};
+
+  // 1) BCP via dolar.melizeche.com (proxy del BCP)
+  try {
+    const r = await fetch("https://dolar.melizeche.com/api/1.0/", {
+      headers: { "User-Agent": "Mozilla/5.0 PY-OS" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (r.ok) {
+      const d = await r.json();
+      const bcp = d?.dolarpy?.bcp;
+      houses = d?.dolarpy || {};
+      if (bcp?.compra && bcp?.venta) {
+        rates.push({ code: "USD", name: NAMES.USD, buy: Math.round(bcp.compra), sell: Math.round(bcp.venta) });
+        usdMid = (bcp.compra + bcp.venta) / 2;
       }
     }
-  }
-  return rates;
-}
+  } catch (e) { console.error("dolarpy err", e); }
 
-async function getBCP() {
-  const idx = await fetch(BCP_INDEX, {
-    headers: { "User-Agent": "Mozilla/5.0 PY-OS" },
-    signal: AbortSignal.timeout(10000),
-  });
-  const html = await idx.text();
-  const m = html.match(/href="([^"]+\.pdf)"/i);
-  if (!m) return { rates: [], pdfUrl: BCP_INDEX, raw: "" };
-  const pdfUrl = m[1].startsWith("http") ? m[1] : `https://www.bcp.gov.py${m[1].startsWith("/") ? "" : "/"}${m[1]}`;
-  const pdf = await fetch(pdfUrl, { headers: { "User-Agent": "Mozilla/5.0 PY-OS" }, signal: AbortSignal.timeout(15000) });
-  const buf = new Uint8Array(await pdf.arrayBuffer());
-  const doc = await getDocumentProxy(buf);
-  const { text } = await extractText(doc, { mergePages: true });
-  const raw = Array.isArray(text) ? text.join("\n") : text;
-  return { rates: parseRates(raw), pdfUrl, raw: raw.slice(0, 4000) };
+  // 2) Otras monedas via open.er-api (USD base, multiplico por PYG)
+  try {
+    const r = await fetch("https://open.er-api.com/v6/latest/USD", { signal: AbortSignal.timeout(8000) });
+    if (r.ok) {
+      const d = await r.json();
+      const er = d?.rates || {};
+      for (const code of ["EUR", "BRL", "ARS", "GBP", "JPY", "CHF", "CLP", "UYU"]) {
+        const usdToCcy = er[code];
+        if (!usdToCcy) continue;
+        // 1 ccy = (usdMid / usdToCcy) PYG (mid)
+        const mid = usdMid / usdToCcy;
+        const spread = mid * 0.01; // 1% spread estimado
+        const buy = Math.round(mid - spread);
+        const sell = Math.round(mid + spread);
+        if (buy > 0 && sell > 0 && buy < 1e9) {
+          rates.push({ code, name: NAMES[code], buy, sell });
+        }
+      }
+    }
+  } catch (e) { console.error("er-api err", e); }
+
+  return {
+    rates,
+    pdfUrl: "https://www.bcp.gov.py/cotizacion-referencial-en-guaranies-i365",
+    source: "BCP (vía dolar.melizeche) + open.er-api",
+    houses,
+  };
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
   const url = new URL(req.url);
   const action = url.searchParams.get("action") || "data";
 
-  // ----- ASESOR IA streaming -----
   if (action === "advisor" && req.method === "POST") {
     try {
       const { question, profile, rates } = await req.json();
@@ -65,15 +75,15 @@ Deno.serve(async (req) => {
 
       const ratesCtx = rates?.length
         ? rates.map((r: any) => `${r.code} (${r.name}): compra ₲${r.buy} / venta ₲${r.sell}`).join("\n")
-        : "(sin datos del BCP en este momento)";
+        : "(sin datos en este momento)";
 
       const SYSTEM = `Sos un asesor económico paraguayo. Hablás claro, sin jerga.
-Datos del BCP HOY:
+Datos de cotización HOY (referenciales BCP):
 ${ratesCtx}
 
 Perfil del usuario: ${profile || "general"}.
 
-Respondés en español rioplatense paraguayo, con recomendaciones accionables. Markdown breve. Si no tenés datos, decilo.`;
+Respondés en español paraguayo, recomendaciones accionables. Markdown breve, números reales. Si te falta info, pedila o decilo.`;
 
       const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -85,29 +95,34 @@ Respondés en español rioplatense paraguayo, con recomendaciones accionables. M
         }),
       });
       if (r.status === 429) return new Response(JSON.stringify({ error: "Demasiadas consultas." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (r.status === 402) return new Response(JSON.stringify({ error: "Sin créditos." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (!r.ok) return new Response(JSON.stringify({ error: "gateway error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (r.status === 402) return new Response(JSON.stringify({ error: "Sin créditos Lovable AI." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (!r.ok) {
+        console.error("advisor gw err", r.status, await r.text());
+        return new Response(JSON.stringify({ error: "Error gateway IA" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
       return new Response(r.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
     } catch (e) {
+      console.error("advisor err", e);
       return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
   }
 
-  // ----- DATOS BCP -----
   try {
-    const fetchedAt = new Date().toISOString();
-    const bcp = await getBCP();
-    const usd = bcp.rates.find((r) => r.code === "USD");
-    const usdPyg = {
-      buy: usd?.buy ?? null,
-      sell: usd?.sell ?? null,
-      midpoint: usd?.buy && usd?.sell ? Math.round(((usd.buy + usd.sell) / 2) * 100) / 100 : null,
-    };
+    const data = await getRates();
+    const usd = data.rates.find((r) => r.code === "USD");
     return new Response(JSON.stringify({
-      source: "Banco Central del Paraguay",
-      fetchedAt, pdfUrl: bcp.pdfUrl, rates: bcp.rates, usdPyg, raw: bcp.raw,
+      source: data.source,
+      fetchedAt: new Date().toISOString(),
+      pdfUrl: data.pdfUrl,
+      rates: data.rates,
+      houses: data.houses,
+      usdPyg: {
+        buy: usd?.buy ?? null, sell: usd?.sell ?? null,
+        midpoint: usd?.buy && usd?.sell ? Math.round((usd.buy + usd.sell) / 2) : null,
+      },
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
+    console.error("eco err", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
