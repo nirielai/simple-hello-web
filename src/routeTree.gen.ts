@@ -9,10 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as EconomiaRouteImport } from './routes/economia'
+import { Route as AuditorRouteImport } from './routes/auditor'
 import { Route as AsistenteRouteImport } from './routes/asistente'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiAuditPdfRouteImport } from './routes/api/audit-pdf'
 
+const EconomiaRoute = EconomiaRouteImport.update({
+  id: '/economia',
+  path: '/economia',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditorRoute = AuditorRouteImport.update({
+  id: '/auditor',
+  path: '/auditor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AsistenteRoute = AsistenteRouteImport.update({
   id: '/asistente',
   path: '/asistente',
@@ -32,35 +44,63 @@ const ApiAuditPdfRoute = ApiAuditPdfRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/asistente': typeof AsistenteRoute
+  '/auditor': typeof AuditorRoute
+  '/economia': typeof EconomiaRoute
   '/api/audit-pdf': typeof ApiAuditPdfRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/asistente': typeof AsistenteRoute
+  '/auditor': typeof AuditorRoute
+  '/economia': typeof EconomiaRoute
   '/api/audit-pdf': typeof ApiAuditPdfRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/asistente': typeof AsistenteRoute
+  '/auditor': typeof AuditorRoute
+  '/economia': typeof EconomiaRoute
   '/api/audit-pdf': typeof ApiAuditPdfRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/asistente' | '/api/audit-pdf'
+  fullPaths: '/' | '/asistente' | '/auditor' | '/economia' | '/api/audit-pdf'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/asistente' | '/api/audit-pdf'
-  id: '__root__' | '/' | '/asistente' | '/api/audit-pdf'
+  to: '/' | '/asistente' | '/auditor' | '/economia' | '/api/audit-pdf'
+  id:
+    | '__root__'
+    | '/'
+    | '/asistente'
+    | '/auditor'
+    | '/economia'
+    | '/api/audit-pdf'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AsistenteRoute: typeof AsistenteRoute
+  AuditorRoute: typeof AuditorRoute
+  EconomiaRoute: typeof EconomiaRoute
   ApiAuditPdfRoute: typeof ApiAuditPdfRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/economia': {
+      id: '/economia'
+      path: '/economia'
+      fullPath: '/economia'
+      preLoaderRoute: typeof EconomiaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auditor': {
+      id: '/auditor'
+      path: '/auditor'
+      fullPath: '/auditor'
+      preLoaderRoute: typeof AuditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/asistente': {
       id: '/asistente'
       path: '/asistente'
@@ -88,6 +128,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AsistenteRoute: AsistenteRoute,
+  AuditorRoute: AuditorRoute,
+  EconomiaRoute: EconomiaRoute,
   ApiAuditPdfRoute: ApiAuditPdfRoute,
 }
 export const routeTree = rootRouteImport
