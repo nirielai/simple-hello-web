@@ -8,35 +8,44 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 42 36% 96%;
+    --foreground: 24 18% 14%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 42 45% 98%;
+    --card-foreground: 24 18% 14%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 42 45% 98%;
+    --popover-foreground: 24 18% 14%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 14 50% 58%;
+    --primary-foreground: 42 45% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 35 30% 90%;
+    --secondary-foreground: 24 18% 18%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 38 24% 88%;
+    --muted-foreground: 25 10% 42%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 14 48% 92%;
+    --accent-foreground: 14 42% 30%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 32 20% 82%;
+    --input: 32 20% 82%;
+    --ring: 14 50% 58%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    --surface: 42 43% 94%;
+    --surface-soft: 39 38% 91%;
+    --risk-low: 151 34% 37%;
+    --risk-medium: 37 73% 48%;
+    --risk-high: 3 61% 53%;
+    --paraguay-blue: 219 57% 38%;
+    --paraguay-red: 350 62% 48%;
+    --shadow-soft: 0 18px 60px -36px hsl(24 18% 14% / 0.35);
 
     --sidebar-background: 0 0% 98%;
 
@@ -101,5 +110,14 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    letter-spacing: 0;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: Fraunces, "Source Serif 4", Georgia, ui-serif, serif;
+    letter-spacing: 0;
   }
 }
