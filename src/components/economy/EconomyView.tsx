@@ -5,6 +5,7 @@ import { ArrowUp, BarChart3, ExternalLink, Loader2, RefreshCw, TrendingUp } from
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import PyOsLayout from "@/components/layout/PyOsLayout";
 
 const ECON_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/economy-live`;
 const AUTH = `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`;
