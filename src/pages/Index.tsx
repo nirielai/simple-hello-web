@@ -109,7 +109,7 @@ const Index = () => {
                     return (
                       <button
                         key={item.id}
-                        onClick={() => setMode(item.id)}
+                        onClick={() => goToMode(item.id)}
                         className={cn(
                           "flex items-start gap-3 rounded-lg border border-transparent p-3 text-left transition hover:bg-accent",
                           mode === item.id && "border-border bg-surface shadow-soft",
@@ -149,7 +149,7 @@ const Index = () => {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setMode(item.id)}
+                    onClick={() => goToMode(item.id)}
                     className={cn(
                       "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium transition",
                       mode === item.id
