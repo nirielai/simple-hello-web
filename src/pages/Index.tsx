@@ -69,7 +69,9 @@ const getModeFromPath = (pathname: string): Mode => {
 };
 
 const Index = () => {
-  const [mode, setMode] = useState<Mode>("assistant");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const mode = getModeFromPath(location.pathname);
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -82,6 +84,8 @@ const Index = () => {
     setFiles((current) => [...current, ...selected]);
     event.target.value = "";
   };
+
+  const goToMode = (nextMode: Mode) => navigate(routeByMode[nextMode]);
 
   return (
     <main className="min-h-screen bg-background text-foreground">
