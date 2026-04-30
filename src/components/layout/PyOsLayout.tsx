@@ -125,8 +125,8 @@ export default function PyOsLayout({
       </aside>
 
       {/* Main */}
-      <div className="flex flex-1 flex-col min-w-0">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/85 px-3 backdrop-blur md:px-6">
+      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
+        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/85 px-3 backdrop-blur md:px-6">
           <button
             onClick={() => setOpen(true)}
             className="rounded-md p-2 text-muted-foreground hover:bg-accent md:hidden"
@@ -147,7 +147,7 @@ export default function PyOsLayout({
             </button>
           )}
         </header>
-        <main className="flex-1 min-w-0">{children}</main>
+        <main className="flex-1 min-w-0 overflow-hidden">{children}</main>
       </div>
     </div>
   );

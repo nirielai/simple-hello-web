@@ -19,14 +19,30 @@ type Eco = { source: string; warnings?: string[]; fetchedAt: string; pdfUrl: str
 function fmt(n: number | null) {
   return n == null ? "—" : "₲ " + n.toLocaleString("es-PY", { maximumFractionDigits: 0 });
 }
-function ago(iso: string) {
-  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (s < 60) return `${s}s`;
-  const m = Math.floor(s / 60); if (m < 60) return `${m}m`;
-  return `${Math.floor(m / 60)}h`;
+
+function RateCard({ rate }: { rate: Rate | null }) {
+  if (!rate) return (
+    <div className="flex flex-col gap-1 rounded-xl border border-border bg-card p-3 animate-pulse">
+      <div className="h-3 w-12 rounded bg-muted" />
+      <div className="h-5 w-20 rounded bg-muted" />
+      <div className="h-2.5 w-16 rounded bg-muted" />
+    </div>
+  );
+  return (
+    <div className="flex flex-col gap-0.5 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/30">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{rate.code}</span>
+        <TrendingUp className="h-3 w-3 text-primary/60" />
+      </div>
+      <span className="font-serif text-base font-medium tabular-nums">{fmt(rate.sell)}</span>
+      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+        <span>Compra {fmt(rate.buy)}</span>
+      </div>
+    </div>
+  );
 }
 
-function LiveRatesBar() {
+function LiveRatesDashboard() {
   const [eco, setEco] = useState<Eco | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -44,42 +60,52 @@ function LiveRatesBar() {
   useEffect(() => {
     load();
     const i = setInterval(load, 5 * 60_000);
-    const t = setInterval(() => setEco((e) => e ? { ...e } : e), 30_000);
-    return () => { clearInterval(i); clearInterval(t); };
+    return () => clearInterval(i);
   }, []);
 
   return (
-    <div className="-mx-3 mb-2 border-b border-border bg-surface/50 px-3 py-2 sm:-mx-6 sm:px-6">
-      {err && (
-        <div className="mb-1.5 flex items-center gap-1 text-[10px] text-destructive">
-          <AlertTriangle className="h-3 w-3" /> {err}
+    <div className="mb-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-serif text-sm font-medium">Cotizaciones en vivo</h2>
+          {eco && (
+            <p className="text-[10px] text-muted-foreground">{eco.source}</p>
+          )}
         </div>
-      )}
-      <div className="flex items-center gap-2 overflow-x-auto">
-        {(eco?.rates.slice(0, 4) || Array(4).fill(null)).map((r, i) => (
-          <div key={i} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2 py-1">
-            <TrendingUp className="h-3 w-3 text-primary" />
-            <div className="min-w-0">
-              <div className="flex items-baseline gap-1">
-                <span className="text-[10px] font-bold uppercase">{r?.code || "—"}</span>
-                <span className="font-serif text-xs">{fmt(r?.sell ?? null)}</span>
-              </div>
-              <p className="text-[9px] text-muted-foreground">venta · compra {fmt(r?.buy ?? null)}</p>
-            </div>
-          </div>
-        ))}
-        <div className="ml-auto flex shrink-0 items-center gap-2 text-[10px] text-muted-foreground">
-          {eco && <span className="hidden sm:inline">{eco.source} · {ago(eco.fetchedAt)}</span>}
+        <div className="flex items-center gap-2">
           {eco?.pdfUrl && (
-            <a href={eco.pdfUrl} target="_blank" rel="noreferrer" className="hover:text-primary">
-              <ExternalLink className="h-3 w-3" />
+            <a href={eco.pdfUrl} target="_blank" rel="noreferrer" className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-0.5">
+              BCP <ExternalLink className="h-2.5 w-2.5" />
             </a>
           )}
-          <button onClick={load} className="hover:text-primary" title="Refrescar">
-            <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
+          <button onClick={load} className="text-muted-foreground hover:text-primary" title="Refrescar">
+            <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
           </button>
         </div>
       </div>
+
+      {err && (
+        <div className="flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs text-destructive">
+          <AlertTriangle className="h-3 w-3" /> {err}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {(eco?.rates.slice(0, 4) || Array(4).fill(null)).map((r, i) => (
+          <RateCard key={i} rate={r} />
+        ))}
+      </div>
+
+      {eco && eco.rates.length > 4 && (
+        <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5">
+          {eco.rates.slice(4).map((r) => (
+            <div key={r.code} className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/50 px-2 py-1.5">
+              <span className="text-[10px] font-semibold uppercase">{r.code}</span>
+              <span className="text-[11px] tabular-nums">{fmt(r.sell)}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -90,10 +116,10 @@ export default function EconomyView() {
       module="economia"
       team="economia"
       title="Inteligencia económica"
-      subtitle="Cotizaciones BCP en vivo + equipo de sub-agentes (DataBot, Analista, Asesor) que investigan, analizan y predicen con pensamiento crítico."
+      subtitle="Cotizaciones BCP en vivo + equipo de 15 agentes especializados que investigan, analizan y predicen con pensamiento crítico."
       starters={STARTERS}
       emptyIcon={<BarChart3 className="h-6 w-6 text-primary" />}
-      topBar={<LiveRatesBar />}
+      topBar={<LiveRatesDashboard />}
     />
   );
 }

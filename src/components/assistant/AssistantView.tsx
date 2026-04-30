@@ -12,8 +12,9 @@ export default function AssistantView() {
   return (
     <ChatShell
       module="asistente"
+      team="asistente"
       title="Asistente ciudadano"
-      subtitle="Trámites, IPS, MEC, SET, cédula, formalización. En español, guaraní o jopara. Consulto webs `.gov.py` y medios cuando hace falta."
+      subtitle="13 agentes especializados investigan, verifican y responden tu consulta. En español, guaraní o jopara."
       starters={STARTERS}
       emptyIcon={<Bot className="h-6 w-6 text-primary" />}
     />

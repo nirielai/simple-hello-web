@@ -1,7 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ArrowUp, Bot, Globe, Loader2, Mic, Search, Square, User2, Volume2, ExternalLink, Users, ArrowRight, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowUp, Bot, Globe, Loader2, Mic, Search, Square, User2, Volume2, ExternalLink, Users, ArrowRight, Sparkles, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -228,7 +228,7 @@ export default function ChatShell({ module, team, title, subtitle, starters, emp
       onClearAll={handleClearAll}
       showHistory
     >
-      <div className="mx-auto flex h-[calc(100vh-3.5rem)] w-full max-w-3xl flex-col px-3 sm:px-6">
+      <div className="mx-auto flex h-[calc(100dvh-3.5rem)] w-full max-w-3xl flex-col px-3 sm:px-6">
         {topBar}
         <div ref={scrollRef} className="flex-1 overflow-y-auto py-6">
           {empty ? (
@@ -308,7 +308,7 @@ export default function ChatShell({ module, team, title, subtitle, starters, emp
 function MessageBubble({ m, speakingId, onSpeak, loading }: {
   m: ChatMessage; speakingId: string | null; onSpeak: () => void; loading?: boolean;
 }) {
-  const [showAgents, setShowAgents] = useState(true);
+  const [showAgents, setShowAgents] = useState(false);
 
   if (m.role === "user") {
     return (
@@ -331,20 +331,29 @@ function MessageBubble({ m, speakingId, onSpeak, loading }: {
       <div className="min-w-0 flex-1">
         {/* Timeline de agentes */}
         {!!m.agents?.length && (
-          <div className="mb-3 rounded-xl border border-border bg-surface/50 p-2.5">
+          <div className="mb-3 rounded-xl border border-border bg-surface/40 p-3">
             <button
               onClick={() => setShowAgents((v) => !v)}
-              className="flex w-full items-center gap-2 text-left text-xs text-muted-foreground hover:text-foreground"
+              className="flex w-full items-center gap-2 text-left text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              <Users className="h-3.5 w-3.5 text-primary" />
-              <span className="font-medium">Equipo trabajando</span>
-              <span className="opacity-60">· {m.agents.length} pasos</span>
+              <MessageCircle className="h-3.5 w-3.5 text-primary" />
+              <span className="font-medium">Conversación del equipo</span>
+              <span className="ml-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{m.agents.length}</span>
               {showAgents ? <ChevronUp className="ml-auto h-3 w-3" /> : <ChevronDown className="ml-auto h-3 w-3" />}
             </button>
             {showAgents && (
-              <ol className="mt-2 space-y-1.5">
+              <ol className="mt-3 space-y-1">
                 {m.agents.map((a) => <AgentRow key={a.id} a={a} />)}
               </ol>
+            )}
+            {!showAgents && m.agents.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {[...new Set(m.agents.map((a) => a.agent))].map((name) => (
+                  <span key={name} className="inline-flex items-center rounded-md bg-card px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border/50">
+                    {name}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
         )}
@@ -386,50 +395,47 @@ function MessageBubble({ m, speakingId, onSpeak, loading }: {
 function AgentRow({ a }: { a: AgentStep }) {
   if (a.status === "handoff") {
     return (
-      <li className="flex items-center gap-1.5 pl-1 text-[11px] text-muted-foreground">
-        <span className="font-medium">{a.agent}</span>
+      <li className="flex items-center gap-1.5 py-0.5 pl-1 text-[11px] text-muted-foreground">
+        <span className="font-medium text-foreground/70">{a.agent}</span>
         <ArrowRight className="h-3 w-3" />
-        <span className="font-medium text-foreground">{a.to}</span>
+        <span className="font-medium text-foreground/70">{a.to}</span>
         {a.text && <span className="truncate opacity-60">· {a.text}</span>}
       </li>
     );
   }
   if (a.status === "tool") {
-    const Icon = a.tool === "web_search" ? Search : Globe;
     return (
       <li className={cn(
-        "flex items-center gap-2 rounded-lg border px-2 py-1 text-xs transition",
-        a.toolSummary ? "border-border bg-card" : "border-primary/30 bg-primary/5 animate-pulse",
+        "flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs transition",
+        a.toolSummary ? "border-border bg-card" : "border-primary/20 bg-primary/5 animate-pulse",
       )}>
-        <Icon className={cn("h-3 w-3 shrink-0", !a.toolSummary && "text-primary")} />
+        {a.tool === "web_search" ? <Search className={cn("h-3 w-3 shrink-0", !a.toolSummary && "text-primary")} /> : <Globe className={cn("h-3 w-3 shrink-0", !a.toolSummary && "text-primary")} />}
         <span className="shrink-0 font-medium">{a.agent}</span>
-        <code className="min-w-0 flex-1 truncate text-[11px] opacity-70">{a.text || a.tool}</code>
+        <span className="min-w-0 flex-1 truncate text-[10px] text-muted-foreground">{a.text || a.tool}</span>
         {a.toolSummary ? (
-          <span className="shrink-0 text-[10px] text-muted-foreground">{a.toolSummary}</span>
+          <span className="shrink-0 rounded bg-surface px-1 py-0.5 text-[9px] text-muted-foreground">{a.toolSummary}</span>
         ) : (
           <Loader2 className="h-3 w-3 shrink-0 animate-spin text-primary" />
         )}
       </li>
     );
   }
-  // thinking / done
   return (
     <li className={cn(
-      "flex items-start gap-2 rounded-lg px-2 py-1 text-xs transition",
-      a.status === "thinking" ? "bg-primary/5" : "",
+      "flex items-start gap-2 rounded-lg px-2.5 py-1.5 text-xs transition",
+      a.status === "thinking" ? "bg-primary/5 animate-pulse" : "hover:bg-surface/50",
     )}>
       {a.status === "thinking" ? (
         <Loader2 className="mt-0.5 h-3 w-3 shrink-0 animate-spin text-primary" />
       ) : (
         <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-primary/70" />
       )}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          <span className="font-medium">{a.agent}</span>
-          <span className="text-[10px] text-muted-foreground">· {a.role}</span>
+      <div className="min-w-0 flex-1 overflow-hidden">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="font-medium text-foreground/90">{a.agent}</span>
         </div>
         {a.text && (
-          <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{a.text}</p>
+          <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground whitespace-pre-wrap">{a.text}</p>
         )}
       </div>
     </li>

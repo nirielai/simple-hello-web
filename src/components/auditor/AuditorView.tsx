@@ -12,8 +12,9 @@ export default function AuditorView() {
   return (
     <ChatShell
       module="auditor"
+      team="auditor"
       title="Auditor público"
-      subtitle="Pegá una URL de PDF/contrato/decreto o pedime que busque en la DNCP. Leo el documento, identifico montos, partes, plazos y riesgos."
+      subtitle="16 agentes especializados analizan documentos, verifican datos y detectan riesgos en contrataciones públicas."
       starters={STARTERS}
       emptyIcon={<FileSearch className="h-6 w-6 text-primary" />}
     />
