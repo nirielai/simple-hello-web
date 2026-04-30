@@ -92,19 +92,20 @@ Deno.serve(async (req) => {
         const enc = new TextEncoder();
         const emit = (obj: any) => controller.enqueue(enc.encode(`data: ${JSON.stringify(obj)}\n\n`));
 
-        async function callLLM(systemPrompt: string, history: any[], useTools = false) {
-          const tools = useTools ? [
-            { type: "function", function: { name: "web_search", description: "Buscar en la web (Google/Bing). Para redes sociales usar queries con site:x.com, site:facebook.com, site:instagram.com.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
-            { type: "function", function: { name: "fetch_url", description: "Leer contenido de una URL pública (HTML/PDF).", parameters: { type: "object", properties: { url: { type: "string" } }, required: ["url"] } } },
-          ] : undefined;
+        const TOOLS = [
+          { type: "function", function: { name: "web_search", description: `Búsqueda web multi-engine (Brave + Startpage + DDG + SearX en paralelo). Pasale recent:true para forzar resultados de ${CURRENT_YEAR}. Para redes podés usar site:x.com / site:instagram.com / site:facebook.com.`, parameters: { type: "object", properties: { query: { type: "string" }, recent: { type: "boolean", description: "Forzar resultados del año actual" } }, required: ["query"] } } },
+          { type: "function", function: { name: "fetch_url", description: "Scraping avanzado de URL (HTML + meta tags + JSON-LD + PDF + fallback Jina Reader). Si la URL es red social rutea automáticamente al scraper social.", parameters: { type: "object", properties: { url: { type: "string" } }, required: ["url"] } } },
+          { type: "function", function: { name: "social_scan", description: `Escaneo profundo de redes sociales (X/Twitter via Nitter, Instagram via Picuki/Imginn/Jina, Facebook, TikTok, YouTube, LinkedIn). Pasá una "query" con el nombre/persona/entidad y descubre handles automáticamente, o pasá "handles" específicos. Trae los últimos posts reales con fecha, texto y link.`, parameters: { type: "object", properties: { query: { type: "string", description: "Nombre persona/entidad a investigar" }, handles: { type: "object", description: "Opcional: handles conocidos por red", properties: { x: { type: "string" }, instagram: { type: "string" }, facebook: { type: "string" }, tiktok: { type: "string" }, youtube: { type: "string" }, linkedin: { type: "string" } } }, networks: { type: "array", items: { type: "string" }, description: "Redes a escanear (default: todas)" } } } } },
+        ];
 
+        async function callLLM(systemPrompt: string, history: any[], useTools = false) {
           const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               model: "google/gemini-3-flash-preview",
               messages: [{ role: "system", content: systemPrompt + (memory ? `\n\nMemoria del usuario:\n${memory}` : "") }, ...history],
-              tools,
+              tools: useTools ? TOOLS : undefined,
             }),
           });
           if (!r.ok) throw new Error(`LLM ${r.status}: ${await r.text()}`);
