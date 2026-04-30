@@ -223,10 +223,7 @@ Deno.serve(async (req) => {
                   body: JSON.stringify({
                     model: "google/gemini-3-flash-preview",
                     messages: [{ role: "system", content: ag.system }, ...history, msg, ...toolMsgs],
-                    tools: [
-                      { type: "function", function: { name: "web_search", description: "Buscar en la web.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
-                      { type: "function", function: { name: "fetch_url", description: "Leer URL.", parameters: { type: "object", properties: { url: { type: "string" } }, required: ["url"] } } },
-                    ],
+                    tools: TOOLS,
                   }),
                 }).then((r) => r.json());
                 rounds++;
