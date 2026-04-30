@@ -357,17 +357,24 @@ export default function ChatShell({ module, title, subtitle, starters, emptyIcon
                   <div className={cn("min-w-0 max-w-[88%]", m.role === "user" ? "rounded-2xl bg-accent px-4 py-2.5 text-accent-foreground" : "")}>
                     {m.tools?.map((t) => {
                       let display = t.name;
+                      let label = t.name === "web_search" ? "Buscando" : "Leyendo";
                       try {
                         const a = JSON.parse(t.arguments);
                         display = a.url || a.query || t.name;
                       } catch {}
                       const Icon = t.name === "web_search" ? Search : Globe;
+                      const done = !!t.result;
                       return (
-                        <div key={t.id} className="mb-2 flex max-w-full items-center gap-2 overflow-hidden rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted-foreground">
-                          <Icon className="h-3 w-3 shrink-0" />
-                          <span className="shrink-0">{t.result ? (t.resultSummary || "consultado") : "consultando"}:</span>
-                          <code className="truncate text-[11px]">{display}</code>
-                          {!t.result && <Loader2 className="h-3 w-3 shrink-0 animate-spin" />}
+                        <div key={t.id} className={cn(
+                          "mb-2 flex max-w-full items-center gap-2 overflow-hidden rounded-full border px-3 py-1 text-xs transition",
+                          done ? "border-border bg-surface text-muted-foreground" : "border-primary/30 bg-primary/5 text-foreground animate-pulse",
+                        )}>
+                          <Icon className={cn("h-3 w-3 shrink-0", !done && "text-primary")} />
+                          <span className="shrink-0 font-medium">
+                            {done ? (t.resultSummary || "consultado") : `${label}…`}
+                          </span>
+                          <code className="truncate text-[11px] opacity-70">{display}</code>
+                          {!done && <Loader2 className="h-3 w-3 shrink-0 animate-spin text-primary" />}
                         </div>
                       );
                     })}
