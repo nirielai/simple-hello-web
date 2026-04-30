@@ -359,32 +359,24 @@ function MessageBubble({ m, speakingId, onSpeak, loading }: {
         )}
 
         {/* Respuesta final */}
-        {(m.content || loading) && (
+        {m.content && (
           <div className="prose-claude break-words text-[15px]">
-            {m.content ? (
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  a: ({ href, children }) => (
-                    <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5">
-                      {children}<ExternalLink className="inline h-3 w-3" />
-                    </a>
-                  ),
-                }}
-              >{m.content}</ReactMarkdown>
-            ) : (
-              <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> El equipo está deliberando…
-              </p>
-            )}
-            {m.content && (
-              <button
-                onClick={onSpeak}
-                className="mt-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
-              >
-                <Volume2 className="h-3 w-3" /> {speakingId === m.id ? "detener" : "escuchar"}
-              </button>
-            )}
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                a: ({ href, children }) => (
+                  <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5">
+                    {children}<ExternalLink className="inline h-3 w-3" />
+                  </a>
+                ),
+              }}
+            >{m.content}</ReactMarkdown>
+            <button
+              onClick={onSpeak}
+              className="mt-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
+            >
+              <Volume2 className="h-3 w-3" /> {speakingId === m.id ? "detener" : "escuchar"}
+            </button>
           </div>
         )}
       </div>

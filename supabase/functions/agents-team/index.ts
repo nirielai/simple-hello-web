@@ -1,4 +1,5 @@
-// 20-agent team: each agent speaks visibly before the Director delivers the final answer
+// Equipo de 20+ agentes especializados — selección inteligente por equipo
+// Contexto temporal: estamos en 2026. Buscar info reciente y redes sociales oficiales.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -6,34 +7,71 @@ const corsHeaders = {
 
 type Agent = { name: string; emoji: string; role: string; system: string; tools?: boolean };
 
-const AGENTS_20: Agent[] = [
-  { name: "Recepcionista", emoji: "🎯", role: "intake", system: "Sos el recepcionista. Leé la consulta, identificá la intención exacta (tema, país, entidad), y delegá al equipo. Máx 2 líneas." },
-  { name: "Buscador Web", emoji: "🔍", role: "search", system: "Buscás info en la web con web_search. Hacé 1-3 búsquedas relevantes. Devolvé URLs y datos clave encontrados. Máx 5 viñetas.", tools: true },
-  { name: "Analista", emoji: "📊", role: "analysis", system: "Analizás los datos recolectados. Identificás patrones, contradicciones, datos faltantes. Si falta algo crítico escribí 'BUSCAR: <query>'. Máx 5 líneas." },
-  { name: "Verificador", emoji: "✅", role: "verify", system: "Verificás las fuentes citadas. ¿Son oficiales? ¿Están vigentes? ¿Hay sesgo? Marcá lo que no se pudo verificar. Máx 3 líneas." },
-  { name: "Economista", emoji: "💰", role: "economics", system: "Especialista en economía paraguaya. Analizás implicaciones económicas: costos, presupuesto, inflación, tipo de cambio. Solo si es relevante. Máx 4 líneas." },
-  { name: "Político", emoji: "🏛️", role: "politics", system: "Especialista en política paraguaya. Contexto político si es relevante: partidos, poder, instituciones. Solo opiná si la consulta lo amerita. Máx 3 líneas." },
-  { name: "Social", emoji: "👥", role: "social", system: "Especialista en temas sociales. Impacto social, desigualdad, acceso a servicios. Solo si aplica. Máx 3 líneas." },
-  { name: "Legal", emoji: "⚖️", role: "legal", system: "Especialista en leyes paraguayas. Citá artículos, leyes, decretos relevantes. Si no aplica, decí 'no relevante'. Máx 4 líneas." },
-  { name: "Estadístico", emoji: "📈", role: "stats", system: "Manejás estadísticas y datos numéricos. Calculá, contextualizá cifras. Si no hay datos numéricos relevantes, decí 'sin datos estadísticos relevantes'. Máx 3 líneas." },
-  { name: "Historiador", emoji: "📜", role: "history", system: "Dás contexto histórico si es relevante. Antecedentes, precedentes. Solo si aporta. Máx 3 líneas." },
-  { name: "Periodista", emoji: "📰", role: "news", system: "Buscás noticias recientes relacionadas con web_search. Usá queries con fecha reciente. Devolvé titulares y links. Máx 4 viñetas.", tools: true },
-  { name: "Crítico", emoji: "🧐", role: "critic", system: "Cuestionás la información recolectada. ¿Hay sesgos? ¿Datos desactualizados? ¿Conclusiones prematuras? Señalá debilidades. Máx 4 líneas." },
-  { name: "Social Media", emoji: "📱", role: "socmedia", system: "Monitoreás redes sociales de entidades oficiales. Buscás con web_search posts recientes en Twitter/X de cuentas oficiales .gov.py. Máx 3 viñetas.", tools: true },
-  { name: "Gov Monitor", emoji: "🏢", role: "govmon", system: "Monitoreás sitios oficiales del gobierno. Usás fetch_url en sitios .gov.py para verificar información. Máx 3 viñetas.", tools: true },
-  { name: "Fact Checker", emoji: "🔬", role: "factcheck", system: "Verificás hechos específicos contrastando múltiples fuentes. Marcá cada hecho como VERIFICADO, NO VERIFICADO o PARCIAL. Máx 4 líneas." },
-  { name: "Sintetizador", emoji: "🔗", role: "synthesis", system: "Unís toda la información del equipo en un resumen coherente y estructurado. Identificás los puntos clave y las conclusiones principales. Máx 8 líneas." },
-  { name: "Redactor", emoji: "✍️", role: "writer", system: "Redactás la respuesta final clara, en español paraguayo. Markdown limpio con secciones, pasos accionables si aplica, links. Sin emojis decorativos." },
-  { name: "Corrector", emoji: "📝", role: "corrector", system: "Corregís errores de la redacción: datos incorrectos, inconsistencias, gramática. Si todo está bien, decí 'aprobado sin cambios'. Máx 3 líneas." },
-  { name: "Fuentes", emoji: "📚", role: "sources", system: "Citás TODAS las fuentes usadas por el equipo con URLs completas. Formato: lista con nombre de fuente y URL. Si no hay fuentes verificables, advertí." },
-  { name: "Director", emoji: "👔", role: "director", system: "Sos el Director. Revisás TODO el trabajo del equipo. Aprobás o pedís correcciones. Luego entregás la RESPUESTA FINAL completa al usuario integrando: la redacción del Redactor + correcciones del Corrector + fuentes. Markdown profesional." },
+const CURRENT_YEAR = new Date().getFullYear();
+const TIME_CTX = `Contexto temporal: estamos en ${CURRENT_YEAR}. Toda búsqueda debe priorizar fuentes de ${CURRENT_YEAR} y ${CURRENT_YEAR - 1}. NUNCA cites datos de 2024 o anteriores como "actuales". Si el modelo conoce solo hasta su fecha de corte, debe usar web_search para obtener datos reales de ${CURRENT_YEAR}.`;
+
+// ============= POOL DE 24 AGENTES =============
+const AGENT_POOL: Agent[] = [
+  // Coordinación
+  { name: "Recepcionista", emoji: "🎯", role: "intake", system: `${TIME_CTX}\nSos el recepcionista. Leé la consulta, identificá la intención exacta (tema, país, entidad, persona, fecha). Detectá si requiere: redes sociales, datos económicos en vivo, normativa, noticias recientes. Máx 3 líneas.` },
+  { name: "Planificador", emoji: "🗺️", role: "planner", system: `${TIME_CTX}\nDiseñás el plan de investigación: qué buscar primero, qué fuentes priorizar (oficiales, redes, prensa), qué agentes deberían intervenir. Máx 5 viñetas.` },
+
+  // Investigación
+  { name: "Buscador Web", emoji: "🔍", role: "search", system: `${TIME_CTX}\nBuscás en la web con web_search. Hacé 2-4 búsquedas con queries específicas e incluí "${CURRENT_YEAR}" o "última hora" cuando aplique. Devolvé URLs y datos clave. Máx 6 viñetas.`, tools: true },
+  { name: "Periodista", emoji: "📰", role: "news", system: `${TIME_CTX}\nBuscás noticias recientes con web_search. Queries con "${CURRENT_YEAR}" + "última semana" + tema. Devolvé titulares con fecha y link. Máx 5 viñetas.`, tools: true },
+  { name: "Social Media", emoji: "📱", role: "socmedia", system: `${TIME_CTX}\nMonitoreás redes sociales (Twitter/X, Facebook, Instagram, TikTok) de figuras y entidades oficiales. Para Paraguay buscá cuentas como @SantiPenap, @MinHaciendaPy, @MEC_PY, @Presidencia_Py, @PoderJudicialPy. Usá web_search con queries tipo: "site:x.com SantiPenap ${CURRENT_YEAR}" o "Santiago Peña tweets ${CURRENT_YEAR}". Devolvé posts recientes con fecha, contenido textual y link directo. Máx 5 viñetas.`, tools: true },
+  { name: "Gov Monitor", emoji: "🏢", role: "govmon", system: `${TIME_CTX}\nMonitoreás sitios oficiales .gov.py con fetch_url. Buscás resoluciones, decretos, comunicados de ${CURRENT_YEAR}. Máx 4 viñetas.`, tools: true },
+  { name: "Scraper", emoji: "🌐", role: "scraper", system: `${TIME_CTX}\nLeés URLs específicas con fetch_url para extraer detalle. Útil para PDFs oficiales, comunicados largos, perfiles. Máx 4 viñetas.`, tools: true },
+
+  // Análisis
+  { name: "Analista", emoji: "📊", role: "analysis", system: `${TIME_CTX}\nAnalizás los datos recolectados. Patrones, contradicciones, datos faltantes. Si falta algo crítico escribí 'BUSCAR: <query>'. Máx 6 líneas.` },
+  { name: "Verificador", emoji: "✅", role: "verify", system: `${TIME_CTX}\nVerificás que las fuentes sean oficiales/recientes (${CURRENT_YEAR}). Marcá lo que no se pudo verificar. Máx 4 líneas.` },
+  { name: "Fact Checker", emoji: "🔬", role: "factcheck", system: `${TIME_CTX}\nVerificás hechos específicos contrastando 2+ fuentes. Marcá cada hecho como VERIFICADO, NO VERIFICADO o PARCIAL con la URL. Máx 5 líneas.` },
+  { name: "Crítico", emoji: "🧐", role: "critic", system: `${TIME_CTX}\nCuestionás la información: sesgos, datos viejos (anteriores a ${CURRENT_YEAR}), conclusiones débiles. Máx 4 líneas.` },
+  { name: "Comparador", emoji: "⚖️", role: "compare", system: `${TIME_CTX}\nComparás Paraguay con la región (Argentina, Brasil, Uruguay, Bolivia). Datos ${CURRENT_YEAR}. Máx 4 líneas.` },
+
+  // Especialistas
+  { name: "Economista", emoji: "💰", role: "economics", system: `${TIME_CTX}\nEspecialista en economía paraguaya. Analizás: tipo de cambio guaraní/dólar/real, inflación PY ${CURRENT_YEAR}, IPC, PIB, presupuesto, política monetaria del BCP. Solo si es relevante. Máx 5 líneas.` },
+  { name: "Inversor", emoji: "📈", role: "investor", system: `${TIME_CTX}\nAnalista de mercados. Evaluás oportunidades: bolsa BVPASA, bonos del tesoro PY, FCI, CDA, dólar, real, criptos. Datos ${CURRENT_YEAR}. Máx 5 líneas.` },
+  { name: "Político", emoji: "🏛️", role: "politics", system: `${TIME_CTX}\nEspecialista en política paraguaya. Gobierno actual de Santiago Peña (ANR), gabinete ${CURRENT_YEAR}, oposición, Congreso. Máx 4 líneas.` },
+  { name: "Social", emoji: "👥", role: "social", system: `${TIME_CTX}\nImpacto social: pobreza, desigualdad, acceso a salud/educación. Datos INE/DGEEC ${CURRENT_YEAR}. Máx 4 líneas.` },
+  { name: "Legal", emoji: "⚖️", role: "legal", system: `${TIME_CTX}\nEspecialista legal paraguayo. Citá leyes/decretos/artículos con número y año. Si no aplica, decí 'no relevante'. Máx 5 líneas.` },
+  { name: "Estadístico", emoji: "📐", role: "stats", system: `${TIME_CTX}\nDatos numéricos contextualizados. Calculá variaciones, tasas. Si no hay cifras, decí 'sin datos estadísticos'. Máx 4 líneas.` },
+  { name: "Historiador", emoji: "📜", role: "history", system: `${TIME_CTX}\nContexto histórico solo si aporta. Antecedentes y precedentes. Máx 3 líneas.` },
+  { name: "Auditor", emoji: "🕵️", role: "audit", system: `${TIME_CTX}\nDetectás irregularidades en contrataciones, presupuesto, ejecución. Citá montos y resoluciones con fecha. Máx 5 líneas.` },
+  { name: "Traductor PY", emoji: "🇵🇾", role: "translator", system: `${TIME_CTX}\nAdaptás la respuesta al español paraguayo coloquial. Si el usuario escribió en guaraní/jopara, respondé en jopara. Máx 3 líneas de aporte.` },
+
+  // Síntesis y entrega
+  { name: "Sintetizador", emoji: "🔗", role: "synthesis", system: `${TIME_CTX}\nUnís todo el trabajo del equipo en un resumen coherente y estructurado. Máx 10 líneas.` },
+  { name: "Redactor", emoji: "✍️", role: "writer", system: `${TIME_CTX}\nRedactás la respuesta final clara, en español paraguayo. Markdown limpio: secciones, bullets, links de fuentes ${CURRENT_YEAR}. Sin emojis decorativos.` },
+  { name: "Corrector", emoji: "📝", role: "corrector", system: `${TIME_CTX}\nCorregís errores de la redacción. Si está bien decí 'aprobado sin cambios'. Máx 3 líneas.` },
+  { name: "Fuentes", emoji: "📚", role: "sources", system: `${TIME_CTX}\nListás TODAS las URLs reales usadas, con fecha de cada fuente. Si una fuente es de 2024 o anterior advertilo. Si no hay fuentes verificables, advertilo claramente.` },
+  { name: "Director", emoji: "👔", role: "director", system: `${TIME_CTX}\nSos el Director del equipo. Revisás TODO el trabajo previo y entregás la RESPUESTA FINAL completa al usuario integrando: redacción + correcciones + fuentes con links activos. Markdown profesional, premium, estilo Claude/Gemini/Grok: encabezados claros, viñetas con sustancia, citas inline tipo [fuente](url), tablas si aplica. Tono experto, directo, sin relleno.` },
 ];
 
-// Teams select which of the 20 agents are relevant
+// ============= EQUIPOS DE 20 AGENTES =============
 const TEAM_AGENTS: Record<string, string[]> = {
-  asistente: ["Recepcionista", "Buscador Web", "Analista", "Verificador", "Legal", "Social", "Gov Monitor", "Fact Checker", "Sintetizador", "Redactor", "Corrector", "Fuentes", "Director"],
-  auditor: ["Recepcionista", "Buscador Web", "Analista", "Verificador", "Economista", "Legal", "Estadístico", "Periodista", "Crítico", "Gov Monitor", "Fact Checker", "Sintetizador", "Redactor", "Corrector", "Fuentes", "Director"],
-  economia: ["Recepcionista", "Buscador Web", "Analista", "Economista", "Estadístico", "Periodista", "Crítico", "Social Media", "Gov Monitor", "Fact Checker", "Sintetizador", "Redactor", "Corrector", "Fuentes", "Director"],
+  asistente: [
+    "Recepcionista", "Planificador",
+    "Buscador Web", "Gov Monitor", "Scraper", "Periodista", "Social Media",
+    "Analista", "Verificador", "Fact Checker", "Crítico",
+    "Legal", "Social", "Político", "Estadístico", "Traductor PY",
+    "Sintetizador", "Redactor", "Corrector", "Fuentes", "Director",
+  ],
+  auditor: [
+    "Recepcionista", "Planificador",
+    "Buscador Web", "Gov Monitor", "Scraper", "Periodista", "Social Media",
+    "Analista", "Verificador", "Fact Checker", "Crítico", "Comparador",
+    "Auditor", "Economista", "Estadístico", "Legal", "Político",
+    "Sintetizador", "Redactor", "Corrector", "Fuentes", "Director",
+  ],
+  economia: [
+    "Recepcionista", "Planificador",
+    "Buscador Web", "Periodista", "Gov Monitor", "Scraper", "Social Media",
+    "Analista", "Verificador", "Fact Checker", "Crítico", "Comparador",
+    "Economista", "Inversor", "Estadístico", "Político", "Historiador",
+    "Sintetizador", "Redactor", "Corrector", "Fuentes", "Director",
+  ],
 };
 
 Deno.serve(async (req) => {
@@ -45,7 +83,7 @@ Deno.serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurado");
 
     const teamNames = TEAM_AGENTS[team] || TEAM_AGENTS.asistente;
-    const agents = teamNames.map((n) => AGENTS_20.find((a) => a.name === n)!).filter(Boolean);
+    const agents = teamNames.map((n) => AGENT_POOL.find((a) => a.name === n)!).filter(Boolean);
     const SUPA_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPA_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
@@ -56,8 +94,8 @@ Deno.serve(async (req) => {
 
         async function callLLM(systemPrompt: string, history: any[], useTools = false) {
           const tools = useTools ? [
-            { type: "function", function: { name: "web_search", description: "Buscar en la web.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
-            { type: "function", function: { name: "fetch_url", description: "Leer contenido de una URL.", parameters: { type: "object", properties: { url: { type: "string" } }, required: ["url"] } } },
+            { type: "function", function: { name: "web_search", description: "Buscar en la web (Google/Bing). Para redes sociales usar queries con site:x.com, site:facebook.com, site:instagram.com.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
+            { type: "function", function: { name: "fetch_url", description: "Leer contenido de una URL pública (HTML/PDF).", parameters: { type: "object", properties: { url: { type: "string" } }, required: ["url"] } } },
           ] : undefined;
 
           const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -131,15 +169,17 @@ Deno.serve(async (req) => {
           const transcript: { agent: string; output: string }[] = [];
           let researchData = "";
 
+          // Selección inteligente: el Recepcionista corre primero y decide qué agentes activar
+          // Por ahora corremos todos en orden, pero los specialists pueden decir "no relevante" y se saltean en la síntesis
           for (let i = 0; i < agents.length; i++) {
             const ag = agents[i];
             const isLast = ag.name === "Director";
             const prev = transcript.map((t) => `[${t.agent}]: ${t.output}`).join("\n\n");
             emit({ type: "agent_start", agent: `${ag.emoji} ${ag.name}`, role: ag.role, message: `${ag.name} analizando…` });
-            await new Promise((r) => setTimeout(r, 80));
+            await new Promise((r) => setTimeout(r, 60));
 
             const history = [
-              { role: "user", content: `Consulta del usuario:\n${userQuery}\n\n${prev ? `Trabajo del equipo hasta ahora:\n${prev}\n\n${researchData ? `Datos investigados:\n${researchData.slice(0, 6000)}\n\n` : ""}` : ""}Tu rol: ${ag.name} (${ag.role}). Respondé SOLO tu parte, máx lo indicado en tu instrucción.` },
+              { role: "user", content: `Consulta del usuario:\n${userQuery}\n\n${prev ? `Trabajo del equipo hasta ahora:\n${prev}\n\n${researchData ? `Datos investigados (resumen):\n${researchData.slice(0, 6000)}\n\n` : ""}` : ""}Tu rol: ${ag.name} (${ag.role}). Respondé SOLO tu parte, máx lo indicado en tu instrucción.` },
             ];
 
             if (isLast) {
@@ -151,7 +191,7 @@ Deno.serve(async (req) => {
 
               let resp = await callLLM(ag.system, history, !!ag.tools);
               let rounds = 0;
-              while (rounds < 2 && resp.choices?.[0]?.message?.tool_calls?.length) {
+              while (rounds < 3 && resp.choices?.[0]?.message?.tool_calls?.length) {
                 const msg = resp.choices[0].message;
                 const toolMsgs: any[] = [];
                 for (const tc of msg.tool_calls) {
@@ -166,6 +206,10 @@ Deno.serve(async (req) => {
                   body: JSON.stringify({
                     model: "google/gemini-3-flash-preview",
                     messages: [{ role: "system", content: ag.system }, ...history, msg, ...toolMsgs],
+                    tools: [
+                      { type: "function", function: { name: "web_search", description: "Buscar en la web.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
+                      { type: "function", function: { name: "fetch_url", description: "Leer URL.", parameters: { type: "object", properties: { url: { type: "string" } }, required: ["url"] } } },
+                    ],
                   }),
                 }).then((r) => r.json());
                 rounds++;
@@ -174,7 +218,6 @@ Deno.serve(async (req) => {
               emit({ type: "agent_thought", agent: `${ag.emoji} ${ag.name}`, text: out });
               transcript.push({ agent: ag.name, output: out });
 
-              // Extra search if analyst/critic requests it
               const m = out.match(/BUSCAR:\s*(.+)/i);
               if (m && (ag.role === "analysis" || ag.role === "critic")) {
                 const searcher = agents.find((a) => a.tools) || agents[1];

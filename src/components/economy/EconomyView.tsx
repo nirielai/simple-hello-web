@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BarChart3, ExternalLink, RefreshCw, TrendingUp, AlertTriangle } from "lucide-react";
+import { BarChart3, ExternalLink, RefreshCw, TrendingUp, AlertTriangle, ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatShell from "@/components/chat/ChatShell";
 
@@ -46,6 +46,7 @@ function LiveRatesDashboard() {
   const [eco, setEco] = useState<Eco | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [open, setOpen] = useState(true);
 
   const load = async () => {
     setLoading(true); setErr(null);
@@ -64,46 +65,73 @@ function LiveRatesDashboard() {
   }, []);
 
   return (
-    <div className="mb-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-serif text-sm font-medium">Cotizaciones en vivo</h2>
-          {eco && (
-            <p className="text-[10px] text-muted-foreground">{eco.source}</p>
-          )}
+    <div className="mb-4 rounded-2xl border border-border bg-card/40 backdrop-blur-sm">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors hover:bg-accent/40"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <TrendingUp className="h-3.5 w-3.5 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="font-serif text-sm font-medium leading-tight">Cotizaciones en vivo</h2>
+            {eco?.rates?.[0] && (
+              <p className="truncate text-[10px] text-muted-foreground">
+                USD {fmt(eco.rates[0].sell)} · {eco.source}
+              </p>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {eco?.pdfUrl && (
-            <a href={eco.pdfUrl} target="_blank" rel="noreferrer" className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-0.5">
+            <a
+              href={eco.pdfUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="hidden sm:inline-flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-primary"
+            >
               BCP <ExternalLink className="h-2.5 w-2.5" />
             </a>
           )}
-          <button onClick={load} className="text-muted-foreground hover:text-primary" title="Refrescar">
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => { e.stopPropagation(); load(); }}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-primary"
+            title="Refrescar"
+          >
             <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
-          </button>
+          </span>
+          {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
         </div>
-      </div>
+      </button>
 
-      {err && (
-        <div className="flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs text-destructive">
-          <AlertTriangle className="h-3 w-3" /> {err}
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {(eco?.rates.slice(0, 4) || Array(4).fill(null)).map((r, i) => (
-          <RateCard key={i} rate={r} />
-        ))}
-      </div>
-
-      {eco && eco.rates.length > 4 && (
-        <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5">
-          {eco.rates.slice(4).map((r) => (
-            <div key={r.code} className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/50 px-2 py-1.5">
-              <span className="text-[10px] font-semibold uppercase">{r.code}</span>
-              <span className="text-[11px] tabular-nums">{fmt(r.sell)}</span>
+      {open && (
+        <div className="space-y-3 px-3 pb-3">
+          {err && (
+            <div className="flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs text-destructive">
+              <AlertTriangle className="h-3 w-3" /> {err}
             </div>
-          ))}
+          )}
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {(eco?.rates.slice(0, 4) || Array(4).fill(null)).map((r, i) => (
+              <RateCard key={i} rate={r} />
+            ))}
+          </div>
+
+          {eco && eco.rates.length > 4 && (
+            <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5">
+              {eco.rates.slice(4).map((r) => (
+                <div key={r.code} className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/50 px-2 py-1.5">
+                  <span className="text-[10px] font-semibold uppercase">{r.code}</span>
+                  <span className="text-[11px] tabular-nums">{fmt(r.sell)}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -116,7 +144,7 @@ export default function EconomyView() {
       module="economia"
       team="economia"
       title="Inteligencia económica"
-      subtitle="Cotizaciones BCP en vivo + equipo de 15 agentes especializados que investigan, analizan y predicen con pensamiento crítico."
+      subtitle="Cotizaciones BCP en vivo + equipo de 20+ agentes especializados con datos 2026, redes sociales y pensamiento crítico."
       starters={STARTERS}
       emptyIcon={<BarChart3 className="h-6 w-6 text-primary" />}
       topBar={<LiveRatesDashboard />}
