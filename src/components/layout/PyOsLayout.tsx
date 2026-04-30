@@ -17,11 +17,12 @@ interface Props {
   onSelect?: (id: string) => void;
   onNew?: () => void;
   onDelete?: (id: string) => void;
+  onClearAll?: () => void;
   showHistory?: boolean;
 }
 
 export default function PyOsLayout({
-  children, conversations = [], activeId, onSelect, onNew, onDelete, showHistory = false,
+  children, conversations = [], activeId, onSelect, onNew, onDelete, onClearAll, showHistory = false,
 }: { children: React.ReactNode } & Props) {
   const { location } = useRouterState();
   const path = location.pathname === "/" ? "/asistente" : location.pathname;
