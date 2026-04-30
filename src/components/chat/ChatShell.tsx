@@ -19,11 +19,12 @@ const TEAM_URL = `${SUPA}/functions/v1/agents-team`;
 
 type Props = {
   module: ModuleKey;
-  team?: ModuleKey; // por defecto, mismo nombre
+  team?: ModuleKey;
   title: string;
   subtitle: string;
   starters: string[];
   emptyIcon?: React.ReactNode;
+  topBar?: React.ReactNode;
 };
 
 export default function ChatShell({ module, team, title, subtitle, starters, emptyIcon }: Props) {
