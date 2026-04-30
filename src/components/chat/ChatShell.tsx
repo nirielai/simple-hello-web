@@ -229,6 +229,7 @@ export default function ChatShell({ module, team, title, subtitle, starters, emp
       showHistory
     >
       <div className="mx-auto flex h-[calc(100vh-3.5rem)] w-full max-w-3xl flex-col px-3 sm:px-6">
+        {topBar}
         <div ref={scrollRef} className="flex-1 overflow-y-auto py-6">
           {empty ? (
             <div className="mx-auto flex h-full max-w-xl flex-col items-center justify-center text-center">
