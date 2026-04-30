@@ -31,9 +31,13 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages } = await req.json();
+    const { messages, memory } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurado");
+
+    const sysContent = memory && typeof memory === "string" && memory.trim()
+      ? `${SYSTEM_PROMPT}\n\nMEMORIA DEL USUARIO (de conversaciones previas, usala con criterio y no la repitas literalmente):\n${memory}`
+      : SYSTEM_PROMPT;
 
     const tools = [
       {
