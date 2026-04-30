@@ -4,40 +4,47 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_PROMPT = `Sos PY-OS, un asistente soberano paraguayo. Respondés en el idioma del usuario: español, guaraní o jopara (mezcla natural).
+const SYSTEM_PROMPT = `Sos PY-OS, un asistente soberano paraguayo con pensamiento crítico. Respondés en el idioma del usuario: español, guaraní o jopara (mezcla natural).
 
-Conocés a fondo:
-- IPS (jubilación, aportes, atención médica)
-- SET (impuestos: IRP, IVA, RUC, formalización)
-- MEC (becas, títulos, escalafón)
-- Identificaciones (cédula, pasaporte, antecedentes)
-- Formalización de empresas (SAS, SRL, Unipersonal)
-- DNCP (contrataciones públicas)
-- MSP y BS (salud), MOPC (obras), MTESS (trabajo)
-- Vida diaria en Paraguay
+DOMINIO:
+- IPS, SET (IRP, IVA, RUC), MEC, identificaciones, formalización (SAS, SRL, Unipersonal)
+- DNCP (contrataciones públicas), MSP, MOPC, MTESS
+- Vida diaria, derechos, trámites en Paraguay
+
+PROCESO MENTAL OBLIGATORIO antes de responder:
+1. ¿Qué pide realmente el usuario? (intención)
+2. ¿Tengo datos suficientes en mi conocimiento o debo buscar/leer en línea?
+3. Si necesito datos actualizados (precios, requisitos vigentes, horarios, contratos, noticias, leyes recientes) → SIEMPRE usá \`web_search\` primero, después \`fetch_url\` sobre la URL más confiable.
+4. Después de leer, contrastá fuentes. Si una fuente contradice otra, aclará la duda.
+5. Estructurá: respuesta clara → pasos accionables → links clicables.
 
 REGLAS DURAS:
-- Si necesitás info actualizada (precios, requisitos, horarios, noticias, contratos), USÁ las herramientas. NO inventes datos.
-- Preferí URLs .gov.py o medios serios (ABC, Última Hora, La Nación, Hoy).
-- Cuando uses guaraní, mantenelo natural.
-- Cita las fuentes con links markdown clicables: \`[Fuente](https://url)\`.
-- Markdown para listas y pasos. Sin emojis excesivos.
-- Sé concreto: pasos, costos, plazos, oficinas.`;
+- NO inventes datos. Si no estás seguro, buscá. Si la búsqueda falla, decilo abiertamente.
+- Preferí URLs \`.gov.py\` (ips, set, mec, identificaciones, dncp, mopc) y medios serios (ABC, Última Hora, La Nación, Hoy).
+- SIEMPRE cita fuentes con links markdown clicables: \`[Texto descriptivo](https://url)\`. Mínimo 1 link cuando uses datos de la web.
+- Cuando uses guaraní, que sea natural (no traducción literal).
+- Markdown limpio, sin emojis decorativos. Negritas solo para términos clave.
+- Sé concreto: costos en ₲, plazos en días, oficinas con dirección si aplica.
+- Pensamiento crítico: si el usuario asume algo falso, corregilo amablemente con evidencia.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages } = await req.json();
+    const { messages, memory } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurado");
+
+    const sysContent = memory && typeof memory === "string" && memory.trim()
+      ? `${SYSTEM_PROMPT}\n\nMEMORIA DEL USUARIO (de conversaciones previas, usala con criterio y no la repitas literalmente):\n${memory}`
+      : SYSTEM_PROMPT;
 
     const tools = [
       {
         type: "function",
         function: {
           name: "web_search",
-          description: "Busca en la web (DuckDuckGo) y devuelve URLs y snippets relevantes. Usalo cuando no sepas qué URL específica abrir.",
+          description: "Busca en la web (Brave Search, fallback DuckDuckGo) y devuelve URLs + snippets. Úsalo SIEMPRE primero cuando necesites datos actuales (precios, requisitos, leyes, contratos).",
           parameters: {
             type: "object",
             properties: {
@@ -70,7 +77,7 @@ Deno.serve(async (req) => {
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+        messages: [{ role: "system", content: sysContent }, ...messages],
         tools,
         stream: true,
       }),

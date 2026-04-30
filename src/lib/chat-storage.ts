@@ -67,6 +67,67 @@ export function deriveTitle(messages: ChatMessage[]): string {
   return first.content.slice(0, 50).trim() + (first.content.length > 50 ? "…" : "");
 }
 
+// ---------- MEMORIA DE APRENDIZAJE ----------
+// Cada módulo guarda una lista de "hechos" cortos sobre el usuario.
+// Se usan en el system prompt para que la IA sea más inteligente con cada conversación.
+const MEM_KEY = (m: string) => `pyos.memory.${m}`;
+const MAX_FACTS = 30;
+
+export type MemoryFact = { id: string; text: string; ts: number };
+
+export function loadMemory(module: string): MemoryFact[] {
+  try { return JSON.parse(localStorage.getItem(MEM_KEY(module)) || "[]"); } catch { return []; }
+}
+export function saveMemory(module: string, facts: MemoryFact[]) {
+  try { localStorage.setItem(MEM_KEY(module), JSON.stringify(facts.slice(0, MAX_FACTS))); } catch {}
+}
+export function addMemoryFact(module: string, text: string) {
+  const t = text.trim();
+  if (!t || t.length < 4) return;
+  const facts = loadMemory(module);
+  // dedup
+  if (facts.some((f) => f.text.toLowerCase() === t.toLowerCase())) return;
+  facts.unshift({ id: crypto.randomUUID(), text: t, ts: Date.now() });
+  saveMemory(module, facts);
+}
+export function clearMemory(module: string) {
+  saveMemory(module, []);
+}
+export function memoryAsContext(module: string): string {
+  const facts = loadMemory(module);
+  if (!facts.length) return "";
+  return facts.slice(0, 20).map((f, i) => `${i + 1}. ${f.text}`).join("\n");
+}
+
+// Heurísticas simples para extraer hechos del mensaje del usuario
+export function extractFactsFromUserMessage(module: string, content: string) {
+  const t = content.trim();
+  if (t.length < 8) return;
+  const lower = t.toLowerCase();
+
+  const patterns: RegExp[] = [
+    /\bsoy\s+([a-záéíóúñ ]{3,40})/i,
+    /\btrabajo (?:en|de|como)\s+([a-záéíóúñ ]{3,40})/i,
+    /\bmi (?:negocio|empresa|rubro) es\s+([a-záéíóúñ ]{3,40})/i,
+    /\bvivo en\s+([a-záéíóúñ ]{3,40})/i,
+    /\btengo\s+(\d{1,3})\s+años/i,
+    /\bgano\s+(₲|gs\.?|guaran[ií]es?\s+)?\s*([\d\.\,]+)/i,
+    /\bme llamo\s+([a-záéíóúñ ]{3,30})/i,
+  ];
+  for (const re of patterns) {
+    const m = t.match(re);
+    if (m) {
+      const fact = m[0].slice(0, 120);
+      addMemoryFact(module, fact);
+    }
+  }
+  // Intereses recurrentes
+  const topics = ["dólar", "real", "euro", "ips", "set", "irp", "iva", "ruc", "cédula", "mec", "dncp", "inversión", "ahorro", "préstamo"];
+  for (const t2 of topics) {
+    if (lower.includes(t2)) addMemoryFact(module, `Le interesa el tema: ${t2}`);
+  }
+}
+
 // Limpia texto para TTS: convierte números y abreviaturas problemáticas
 export function speakClean(text: string): string {
   let t = text;

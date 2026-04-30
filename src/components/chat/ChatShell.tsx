@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import {
   ChatMessage, Conversation, deleteConversation, deriveTitle,
   loadConversations, newConversation, speakClean, upsertConversation,
+  memoryAsContext, extractFactsFromUserMessage,
 } from "@/lib/chat-storage";
 import PyOsLayout from "@/components/layout/PyOsLayout";
 
@@ -182,10 +183,11 @@ export default function ChatShell({ module, title, subtitle, starters, emptyIcon
     let activeTools: any[] = [];
 
     abortRef.current = new AbortController();
+    const memory = memoryAsContext(module);
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: AUTH },
-      body: JSON.stringify({ messages: apiMsgs }),
+      body: JSON.stringify({ messages: apiMsgs, memory }),
       signal: abortRef.current.signal,
     });
 
@@ -235,7 +237,7 @@ export default function ChatShell({ module, title, subtitle, starters, emptyIcon
     const resp2 = await fetch(CHAT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: AUTH },
-      body: JSON.stringify({ messages: [...apiMsgs, assistantToolMsg, ...toolMsgs] }),
+      body: JSON.stringify({ messages: [...apiMsgs, assistantToolMsg, ...toolMsgs], memory }),
       signal: abortRef.current.signal,
     });
     if (!resp2.ok) {
@@ -279,7 +281,7 @@ export default function ChatShell({ module, title, subtitle, starters, emptyIcon
       const resp3 = await fetch(CHAT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: AUTH },
-        body: JSON.stringify({ messages: [...apiMsgs, assistantToolMsg, ...toolMsgs, atm, ...tm] }),
+        body: JSON.stringify({ messages: [...apiMsgs, assistantToolMsg, ...toolMsgs, atm, ...tm], memory }),
       });
       if (resp3.ok) {
         await readSSE(resp3, (c) => { so3 += c; setLastAssistant((m) => ({ ...m, content: so3 })); }, () => {});
@@ -293,6 +295,7 @@ export default function ChatShell({ module, title, subtitle, starters, emptyIcon
     setInput("");
     setLoading(true);
     const userMsg: ChatMessage = { id: crypto.randomUUID(), role: "user", content: t, ts: Date.now() };
+    extractFactsFromUserMessage(module, t);
     const newHistory = [...active.messages, userMsg];
     setActive((prev) => ({ ...prev, messages: newHistory, updatedAt: Date.now() }));
     try { await streamTurn(newHistory); }
@@ -354,17 +357,24 @@ export default function ChatShell({ module, title, subtitle, starters, emptyIcon
                   <div className={cn("min-w-0 max-w-[88%]", m.role === "user" ? "rounded-2xl bg-accent px-4 py-2.5 text-accent-foreground" : "")}>
                     {m.tools?.map((t) => {
                       let display = t.name;
+                      let label = t.name === "web_search" ? "Buscando" : "Leyendo";
                       try {
                         const a = JSON.parse(t.arguments);
                         display = a.url || a.query || t.name;
                       } catch {}
                       const Icon = t.name === "web_search" ? Search : Globe;
+                      const done = !!t.result;
                       return (
-                        <div key={t.id} className="mb-2 flex max-w-full items-center gap-2 overflow-hidden rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted-foreground">
-                          <Icon className="h-3 w-3 shrink-0" />
-                          <span className="shrink-0">{t.result ? (t.resultSummary || "consultado") : "consultando"}:</span>
-                          <code className="truncate text-[11px]">{display}</code>
-                          {!t.result && <Loader2 className="h-3 w-3 shrink-0 animate-spin" />}
+                        <div key={t.id} className={cn(
+                          "mb-2 flex max-w-full items-center gap-2 overflow-hidden rounded-full border px-3 py-1 text-xs transition",
+                          done ? "border-border bg-surface text-muted-foreground" : "border-primary/30 bg-primary/5 text-foreground animate-pulse",
+                        )}>
+                          <Icon className={cn("h-3 w-3 shrink-0", !done && "text-primary")} />
+                          <span className="shrink-0 font-medium">
+                            {done ? (t.resultSummary || "consultado") : `${label}…`}
+                          </span>
+                          <code className="truncate text-[11px] opacity-70">{display}</code>
+                          {!done && <Loader2 className="h-3 w-3 shrink-0 animate-spin text-primary" />}
                         </div>
                       );
                     })}
