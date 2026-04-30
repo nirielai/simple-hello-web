@@ -49,27 +49,27 @@ function LiveRatesBar() {
   }, []);
 
   return (
-    <div className="border-b border-border bg-surface/50 px-3 py-2 sm:px-6">
+    <div className="-mx-3 mb-2 border-b border-border bg-surface/50 px-3 py-2 sm:-mx-6 sm:px-6">
       {err && (
-        <div className="mb-2 flex items-center gap-2 text-xs text-destructive">
+        <div className="mb-1.5 flex items-center gap-1 text-[10px] text-destructive">
           <AlertTriangle className="h-3 w-3" /> {err}
         </div>
       )}
-      <div className="mx-auto flex max-w-3xl items-center gap-3 overflow-x-auto">
+      <div className="flex items-center gap-2 overflow-x-auto">
         {(eco?.rates.slice(0, 4) || Array(4).fill(null)).map((r, i) => (
-          <div key={i} className="flex shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5">
+          <div key={i} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2 py-1">
             <TrendingUp className="h-3 w-3 text-primary" />
             <div className="min-w-0">
-              <div className="flex items-baseline gap-1.5">
+              <div className="flex items-baseline gap-1">
                 <span className="text-[10px] font-bold uppercase">{r?.code || "—"}</span>
-                <span className="font-serif text-sm">{fmt(r?.sell ?? null)}</span>
+                <span className="font-serif text-xs">{fmt(r?.sell ?? null)}</span>
               </div>
               <p className="text-[9px] text-muted-foreground">venta · compra {fmt(r?.buy ?? null)}</p>
             </div>
           </div>
         ))}
         <div className="ml-auto flex shrink-0 items-center gap-2 text-[10px] text-muted-foreground">
-          {eco && <span>{eco.source} · {ago(eco.fetchedAt)}</span>}
+          {eco && <span className="hidden sm:inline">{eco.source} · {ago(eco.fetchedAt)}</span>}
           {eco?.pdfUrl && (
             <a href={eco.pdfUrl} target="_blank" rel="noreferrer" className="hover:text-primary">
               <ExternalLink className="h-3 w-3" />
@@ -86,18 +86,14 @@ function LiveRatesBar() {
 
 export default function EconomyView() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <LiveRatesBar />
-      <div className="flex-1">
-        <ChatShell
-          module="economia"
-          team="economia"
-          title="Inteligencia económica"
-          subtitle="Cotizaciones BCP en vivo + equipo de sub-agentes (DataBot, Analista, Asesor) que investigan, analizan y predicen con pensamiento crítico."
-          starters={STARTERS}
-          emptyIcon={<BarChart3 className="h-6 w-6 text-primary" />}
-        />
-      </div>
-    </div>
+    <ChatShell
+      module="economia"
+      team="economia"
+      title="Inteligencia económica"
+      subtitle="Cotizaciones BCP en vivo + equipo de sub-agentes (DataBot, Analista, Asesor) que investigan, analizan y predicen con pensamiento crítico."
+      starters={STARTERS}
+      emptyIcon={<BarChart3 className="h-6 w-6 text-primary" />}
+      topBar={<LiveRatesBar />}
+    />
   );
 }
