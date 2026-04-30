@@ -27,7 +27,7 @@ type Props = {
   topBar?: React.ReactNode;
 };
 
-export default function ChatShell({ module, team, title, subtitle, starters, emptyIcon }: Props) {
+export default function ChatShell({ module, team, title, subtitle, starters, emptyIcon, topBar }: Props) {
   const teamKey = team || module;
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [active, setActive] = useState<Conversation>(() => newConversation(module));
