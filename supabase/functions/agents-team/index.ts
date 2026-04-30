@@ -149,9 +149,22 @@ Deno.serve(async (req) => {
         }
 
         async function runTool(agentName: string, name: string, args: any): Promise<{ result: string; summary: string }> {
-          const url = name === "web_search" ? `${SUPA_URL}/functions/v1/web-search` : `${SUPA_URL}/functions/v1/scrape-web`;
-          const body = name === "web_search" ? { query: args.query } : { url: args.url };
-          emit({ type: "tool_call", agent: agentName, tool: name, input: args, summary: name === "web_search" ? `Buscando: ${args.query}` : `Leyendo: ${args.url}` });
+          let url: string, body: any, summaryIn: string;
+          if (name === "web_search") {
+            url = `${SUPA_URL}/functions/v1/web-search`;
+            body = { query: args.query, recent: !!args.recent };
+            summaryIn = `Buscando: ${args.query}${args.recent ? " · 🆕" : ""}`;
+          } else if (name === "social_scan") {
+            url = `${SUPA_URL}/functions/v1/social-scrape`;
+            body = { query: args.query, handles: args.handles, networks: args.networks };
+            const target = args.query || Object.values(args.handles || {}).filter(Boolean).join(", ") || "?";
+            summaryIn = `Escaneando redes: ${target}`;
+          } else {
+            url = `${SUPA_URL}/functions/v1/scrape-web`;
+            body = { url: args.url };
+            summaryIn = `Leyendo: ${args.url}`;
+          }
+          emit({ type: "tool_call", agent: agentName, tool: name, input: args, summary: summaryIn });
           const r = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPA_KEY}` },
@@ -159,10 +172,13 @@ Deno.serve(async (req) => {
           });
           const data = await r.json();
           let summary = "ok";
-          if (name === "web_search") summary = data.results?.length ? `${data.results.length} resultados` : "sin resultados";
-          else summary = data.error ? "error" : (data.contentType === "pdf" ? `PDF (${data.pages || "?"}p)` : "leído");
+          if (name === "web_search") summary = data.results?.length ? `${data.results.length} resultados (${(data.engines || []).join(", ")})` : "sin resultados";
+          else if (name === "social_scan") {
+            const parts = Object.entries(data.summary || {}).map(([k, v]) => `${k}:${v}`).join(" ");
+            summary = data.count ? `${data.count} posts · ${parts}` : "sin posts";
+          } else summary = data.error ? "error" : (data.contentType === "pdf" ? `PDF (${data.pages || "?"}p)` : (data.contentType === "social" ? `${data.count || 0} posts ${data.network}` : "leído"));
           emit({ type: "tool_result", agent: agentName, tool: name, summary });
-          return { result: JSON.stringify(data).slice(0, 5000), summary };
+          return { result: JSON.stringify(data).slice(0, 6000), summary };
         }
 
         try {
