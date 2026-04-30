@@ -116,7 +116,7 @@ export default function EconomyView() {
       module="economia"
       team="economia"
       title="Inteligencia económica"
-      subtitle="Cotizaciones BCP en vivo + equipo de 15 agentes especializados que investigan, analizan y predicen con pensamiento crítico."
+      subtitle="Cotizaciones BCP en vivo + equipo de 20+ agentes especializados con datos 2026, redes sociales y pensamiento crítico."
       starters={STARTERS}
       emptyIcon={<BarChart3 className="h-6 w-6 text-primary" />}
       topBar={<LiveRatesDashboard />}

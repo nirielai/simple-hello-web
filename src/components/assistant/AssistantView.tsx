@@ -14,7 +14,7 @@ export default function AssistantView() {
       module="asistente"
       team="asistente"
       title="Asistente ciudadano"
-      subtitle="13 agentes especializados investigan, verifican y responden tu consulta. En español, guaraní o jopara."
+      subtitle="Equipo de 20+ agentes especializados — investigación web, redes sociales oficiales, verificación cruzada y respuesta premium estilo Claude / Gemini / Grok."
       starters={STARTERS}
       emptyIcon={<Bot className="h-6 w-6 text-primary" />}
     />
