@@ -14,7 +14,7 @@ export default function AuditorView() {
       module="auditor"
       team="auditor"
       title="Auditor público"
-      subtitle="16 agentes especializados analizan documentos, verifican datos y detectan riesgos en contrataciones públicas."
+      subtitle="Equipo de 20+ agentes especializados — auditoría profunda con datos 2026, redes sociales oficiales y verificación cruzada."
       starters={STARTERS}
       emptyIcon={<FileSearch className="h-6 w-6 text-primary" />}
     />
