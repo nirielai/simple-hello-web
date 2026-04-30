@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BarChart3, ExternalLink, RefreshCw, TrendingUp, TrendingDown, AlertTriangle, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
+import { BarChart3, ExternalLink, RefreshCw, TrendingUp, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatShell from "@/components/chat/ChatShell";
 
