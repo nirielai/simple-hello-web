@@ -1,14 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import PyOsShell from "@/components/PyOsShell";
+import AssistantView from "@/components/assistant/AssistantView";
 
 export const Route = createFileRoute("/asistente")({
   head: () => ({
     meta: [
       { title: "Asistente ciudadano · PY-OS" },
-      { name: "description", content: "Consultas sobre trámites de Paraguay: IPS, MEC, SET, cédula, formalización de empresas, en español, guaraní y jopara." },
-      { property: "og:title", content: "Asistente ciudadano · PY-OS" },
-      { property: "og:description", content: "Chat propio para trámites y vida diaria en Paraguay." },
+      { name: "description", content: "Chat propio para trámites en Paraguay: IPS, MEC, SET, cédula, formalización. En español, guaraní y jopara." },
     ],
   }),
-  component: () => <PyOsShell mode="assistant" />,
+  component: AssistantView,
 });

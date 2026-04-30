@@ -33,10 +33,14 @@ export const Route = createRootRoute({
       { name: "description", content: "Asistente, auditor de PDFs públicos y panel económico de Paraguay con datos en vivo del Banco Central." },
       { name: "author", content: "PY-OS" },
       { property: "og:title", content: "PY-OS · Inteligencia Soberana 🇵🇾" },
-      { property: "og:description", content: "Trámites, auditoría y economía paraguaya en tiempo real." },
+      { property: "og:description", content: "Asistente, auditor de PDFs públicos y panel económico de Paraguay con datos en vivo del Banco Central." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "PY-OS · Inteligencia Soberana 🇵🇾" },
+      { name: "twitter:description", content: "Asistente, auditor de PDFs públicos y panel económico de Paraguay con datos en vivo del Banco Central." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/78381598-e75d-4d74-aca1-8da0b76b5278/id-preview-b4d97536--8057d387-ae27-4490-b1dd-2c2ed6d2eb53.lovable.app-1777398142238.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/78381598-e75d-4d74-aca1-8da0b76b5278/id-preview-b4d97536--8057d387-ae27-4490-b1dd-2c2ed6d2eb53.lovable.app-1777398142238.png" },
     ],
     links: [
       {

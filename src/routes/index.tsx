@@ -1,14 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import PyOsShell from "@/components/PyOsShell";
+import AssistantView from "@/components/assistant/AssistantView";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "PY-OS · Asistente · Auditor · Economía 🇵🇾" },
-      { name: "description", content: "Inteligencia soberana para Paraguay: chat ciudadano, auditor de PDFs públicos y panel económico en vivo desde el BCP." },
-      { property: "og:title", content: "PY-OS · Inteligencia Soberana 🇵🇾" },
-      { property: "og:description", content: "Trámites, auditoría de licitaciones y cotizaciones del BCP en tiempo real." },
+      { name: "description", content: "Inteligencia soberana para Paraguay: chat ciudadano, auditor de PDFs públicos y panel económico en vivo." },
     ],
   }),
-  component: () => <PyOsShell mode="assistant" />,
+  component: AssistantView,
 });
