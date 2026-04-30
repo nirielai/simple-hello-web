@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import {
   ChatMessage, Conversation, deleteConversation, deriveTitle,
   loadConversations, newConversation, speakClean, upsertConversation,
+  memoryAsContext, extractFactsFromUserMessage,
 } from "@/lib/chat-storage";
 import PyOsLayout from "@/components/layout/PyOsLayout";
 
@@ -182,10 +183,11 @@ export default function ChatShell({ module, title, subtitle, starters, emptyIcon
     let activeTools: any[] = [];
 
     abortRef.current = new AbortController();
+    const memory = memoryAsContext(module);
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: AUTH },
-      body: JSON.stringify({ messages: apiMsgs }),
+      body: JSON.stringify({ messages: apiMsgs, memory }),
       signal: abortRef.current.signal,
     });
 
@@ -235,7 +237,7 @@ export default function ChatShell({ module, title, subtitle, starters, emptyIcon
     const resp2 = await fetch(CHAT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: AUTH },
-      body: JSON.stringify({ messages: [...apiMsgs, assistantToolMsg, ...toolMsgs] }),
+      body: JSON.stringify({ messages: [...apiMsgs, assistantToolMsg, ...toolMsgs], memory }),
       signal: abortRef.current.signal,
     });
     if (!resp2.ok) {
@@ -279,7 +281,7 @@ export default function ChatShell({ module, title, subtitle, starters, emptyIcon
       const resp3 = await fetch(CHAT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: AUTH },
-        body: JSON.stringify({ messages: [...apiMsgs, assistantToolMsg, ...toolMsgs, atm, ...tm] }),
+        body: JSON.stringify({ messages: [...apiMsgs, assistantToolMsg, ...toolMsgs, atm, ...tm], memory }),
       });
       if (resp3.ok) {
         await readSSE(resp3, (c) => { so3 += c; setLastAssistant((m) => ({ ...m, content: so3 })); }, () => {});
@@ -293,6 +295,7 @@ export default function ChatShell({ module, title, subtitle, starters, emptyIcon
     setInput("");
     setLoading(true);
     const userMsg: ChatMessage = { id: crypto.randomUUID(), role: "user", content: t, ts: Date.now() };
+    extractFactsFromUserMessage(module, t);
     const newHistory = [...active.messages, userMsg];
     setActive((prev) => ({ ...prev, messages: newHistory, updatedAt: Date.now() }));
     try { await streamTurn(newHistory); }
