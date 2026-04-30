@@ -17,11 +17,11 @@ const AGENT_POOL: Agent[] = [
   { name: "Planificador", emoji: "🗺️", role: "planner", system: `${TIME_CTX}\nDiseñás el plan de investigación: qué buscar primero, qué fuentes priorizar (oficiales, redes, prensa), qué agentes deberían intervenir. Máx 5 viñetas.` },
 
   // Investigación
-  { name: "Buscador Web", emoji: "🔍", role: "search", system: `${TIME_CTX}\nBuscás en la web con web_search. Hacé 2-4 búsquedas con queries específicas e incluí "${CURRENT_YEAR}" o "última hora" cuando aplique. Devolvé URLs y datos clave. Máx 6 viñetas.`, tools: true },
-  { name: "Periodista", emoji: "📰", role: "news", system: `${TIME_CTX}\nBuscás noticias recientes con web_search. Queries con "${CURRENT_YEAR}" + "última semana" + tema. Devolvé titulares con fecha y link. Máx 5 viñetas.`, tools: true },
-  { name: "Social Media", emoji: "📱", role: "socmedia", system: `${TIME_CTX}\nMonitoreás redes sociales (Twitter/X, Facebook, Instagram, TikTok) de figuras y entidades oficiales. Para Paraguay buscá cuentas como @SantiPenap, @MinHaciendaPy, @MEC_PY, @Presidencia_Py, @PoderJudicialPy. Usá web_search con queries tipo: "site:x.com SantiPenap ${CURRENT_YEAR}" o "Santiago Peña tweets ${CURRENT_YEAR}". Devolvé posts recientes con fecha, contenido textual y link directo. Máx 5 viñetas.`, tools: true },
+  { name: "Buscador Web", emoji: "🔍", role: "search", system: `${TIME_CTX}\nBuscás en la web con web_search (pasale recent:true para forzar resultados de ${CURRENT_YEAR}). Hacé 2-4 búsquedas con queries específicas. Si la consulta menciona una persona/empresa/entidad → llamá social_scan ANTES que web_search para tener sus posts en redes. Devolvé URLs y datos clave. Máx 6 viñetas.`, tools: true },
+  { name: "Periodista", emoji: "📰", role: "news", system: `${TIME_CTX}\nBuscás noticias recientes con web_search usando recent:true. Queries con tema + "última semana". Devolvé titulares con fecha y link. Máx 5 viñetas.`, tools: true },
+  { name: "Social Media", emoji: "📱", role: "socmedia", system: `${TIME_CTX}\nMonitoreás TODAS las redes (X/Twitter, Instagram, Facebook, TikTok, YouTube) de cualquier persona/entidad que mencione la consulta. SIEMPRE empezá llamando social_scan({ query: "<nombre persona/entidad>" }) — el sistema descubre los handles automáticamente y trae los últimos posts de cada red. Si ya conocés un handle específico podés pasarlo: social_scan({ handles: { x: "SantiPenap", instagram: "santipenap" } }). Devolvé por cada red: handle encontrado + 3-5 posts recientes con fecha, texto y link directo. Si una red no tiene resultados decilo. Para Paraguay tené presente: @SantiPenap (Presidente), @Presidencia_Py, @MinHaciendaPy, @MEC_PY, @PoderJudicialPy, @senadopy. Máx 8 viñetas.`, tools: true },
   { name: "Gov Monitor", emoji: "🏢", role: "govmon", system: `${TIME_CTX}\nMonitoreás sitios oficiales .gov.py con fetch_url. Buscás resoluciones, decretos, comunicados de ${CURRENT_YEAR}. Máx 4 viñetas.`, tools: true },
-  { name: "Scraper", emoji: "🌐", role: "scraper", system: `${TIME_CTX}\nLeés URLs específicas con fetch_url para extraer detalle. Útil para PDFs oficiales, comunicados largos, perfiles. Máx 4 viñetas.`, tools: true },
+  { name: "Scraper", emoji: "🌐", role: "scraper", system: `${TIME_CTX}\nLeés URLs específicas con fetch_url para extraer detalle profundo (PDFs oficiales, comunicados, perfiles, JSON-LD). Si la URL es de red social, fetch_url la rutea automáticamente al scraper social. Máx 4 viñetas.`, tools: true },
 
   // Análisis
   { name: "Analista", emoji: "📊", role: "analysis", system: `${TIME_CTX}\nAnalizás los datos recolectados. Patrones, contradicciones, datos faltantes. Si falta algo crítico escribí 'BUSCAR: <query>'. Máx 6 líneas.` },
@@ -92,19 +92,20 @@ Deno.serve(async (req) => {
         const enc = new TextEncoder();
         const emit = (obj: any) => controller.enqueue(enc.encode(`data: ${JSON.stringify(obj)}\n\n`));
 
-        async function callLLM(systemPrompt: string, history: any[], useTools = false) {
-          const tools = useTools ? [
-            { type: "function", function: { name: "web_search", description: "Buscar en la web (Google/Bing). Para redes sociales usar queries con site:x.com, site:facebook.com, site:instagram.com.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
-            { type: "function", function: { name: "fetch_url", description: "Leer contenido de una URL pública (HTML/PDF).", parameters: { type: "object", properties: { url: { type: "string" } }, required: ["url"] } } },
-          ] : undefined;
+        const TOOLS = [
+          { type: "function", function: { name: "web_search", description: `Búsqueda web multi-engine (Brave + Startpage + DDG + SearX en paralelo). Pasale recent:true para forzar resultados de ${CURRENT_YEAR}. Para redes podés usar site:x.com / site:instagram.com / site:facebook.com.`, parameters: { type: "object", properties: { query: { type: "string" }, recent: { type: "boolean", description: "Forzar resultados del año actual" } }, required: ["query"] } } },
+          { type: "function", function: { name: "fetch_url", description: "Scraping avanzado de URL (HTML + meta tags + JSON-LD + PDF + fallback Jina Reader). Si la URL es red social rutea automáticamente al scraper social.", parameters: { type: "object", properties: { url: { type: "string" } }, required: ["url"] } } },
+          { type: "function", function: { name: "social_scan", description: `Escaneo profundo de redes sociales (X/Twitter via Nitter, Instagram via Picuki/Imginn/Jina, Facebook, TikTok, YouTube, LinkedIn). Pasá una "query" con el nombre/persona/entidad y descubre handles automáticamente, o pasá "handles" específicos. Trae los últimos posts reales con fecha, texto y link.`, parameters: { type: "object", properties: { query: { type: "string", description: "Nombre persona/entidad a investigar" }, handles: { type: "object", description: "Opcional: handles conocidos por red", properties: { x: { type: "string" }, instagram: { type: "string" }, facebook: { type: "string" }, tiktok: { type: "string" }, youtube: { type: "string" }, linkedin: { type: "string" } } }, networks: { type: "array", items: { type: "string" }, description: "Redes a escanear (default: todas)" } } } } },
+        ];
 
+        async function callLLM(systemPrompt: string, history: any[], useTools = false) {
           const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               model: "google/gemini-3-flash-preview",
               messages: [{ role: "system", content: systemPrompt + (memory ? `\n\nMemoria del usuario:\n${memory}` : "") }, ...history],
-              tools,
+              tools: useTools ? TOOLS : undefined,
             }),
           });
           if (!r.ok) throw new Error(`LLM ${r.status}: ${await r.text()}`);
@@ -148,9 +149,22 @@ Deno.serve(async (req) => {
         }
 
         async function runTool(agentName: string, name: string, args: any): Promise<{ result: string; summary: string }> {
-          const url = name === "web_search" ? `${SUPA_URL}/functions/v1/web-search` : `${SUPA_URL}/functions/v1/scrape-web`;
-          const body = name === "web_search" ? { query: args.query } : { url: args.url };
-          emit({ type: "tool_call", agent: agentName, tool: name, input: args, summary: name === "web_search" ? `Buscando: ${args.query}` : `Leyendo: ${args.url}` });
+          let url: string, body: any, summaryIn: string;
+          if (name === "web_search") {
+            url = `${SUPA_URL}/functions/v1/web-search`;
+            body = { query: args.query, recent: !!args.recent };
+            summaryIn = `Buscando: ${args.query}${args.recent ? " · 🆕" : ""}`;
+          } else if (name === "social_scan") {
+            url = `${SUPA_URL}/functions/v1/social-scrape`;
+            body = { query: args.query, handles: args.handles, networks: args.networks };
+            const target = args.query || Object.values(args.handles || {}).filter(Boolean).join(", ") || "?";
+            summaryIn = `Escaneando redes: ${target}`;
+          } else {
+            url = `${SUPA_URL}/functions/v1/scrape-web`;
+            body = { url: args.url };
+            summaryIn = `Leyendo: ${args.url}`;
+          }
+          emit({ type: "tool_call", agent: agentName, tool: name, input: args, summary: summaryIn });
           const r = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPA_KEY}` },
@@ -158,10 +172,13 @@ Deno.serve(async (req) => {
           });
           const data = await r.json();
           let summary = "ok";
-          if (name === "web_search") summary = data.results?.length ? `${data.results.length} resultados` : "sin resultados";
-          else summary = data.error ? "error" : (data.contentType === "pdf" ? `PDF (${data.pages || "?"}p)` : "leído");
+          if (name === "web_search") summary = data.results?.length ? `${data.results.length} resultados (${(data.engines || []).join(", ")})` : "sin resultados";
+          else if (name === "social_scan") {
+            const parts = Object.entries(data.summary || {}).map(([k, v]) => `${k}:${v}`).join(" ");
+            summary = data.count ? `${data.count} posts · ${parts}` : "sin posts";
+          } else summary = data.error ? "error" : (data.contentType === "pdf" ? `PDF (${data.pages || "?"}p)` : (data.contentType === "social" ? `${data.count || 0} posts ${data.network}` : "leído"));
           emit({ type: "tool_result", agent: agentName, tool: name, summary });
-          return { result: JSON.stringify(data).slice(0, 5000), summary };
+          return { result: JSON.stringify(data).slice(0, 6000), summary };
         }
 
         try {
@@ -206,10 +223,7 @@ Deno.serve(async (req) => {
                   body: JSON.stringify({
                     model: "google/gemini-3-flash-preview",
                     messages: [{ role: "system", content: ag.system }, ...history, msg, ...toolMsgs],
-                    tools: [
-                      { type: "function", function: { name: "web_search", description: "Buscar en la web.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
-                      { type: "function", function: { name: "fetch_url", description: "Leer URL.", parameters: { type: "object", properties: { url: { type: "string" } }, required: ["url"] } } },
-                    ],
+                    tools: TOOLS,
                   }),
                 }).then((r) => r.json());
                 rounds++;
