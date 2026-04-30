@@ -1,0 +1,22 @@
+project_id = "gadfbjjuflscexgnjcdz"
+
+[functions.agents-team]
+verify_jwt = false
+
+[functions.economy-live]
+verify_jwt = false
+
+[functions.web-search]
+verify_jwt = false
+
+[functions.scrape-web]
+verify_jwt = false
+
+[functions.audit-pdf]
+verify_jwt = false
+
+[functions.audit-analyze]
+verify_jwt = false
+
+[functions.chat]
+verify_jwt = false
