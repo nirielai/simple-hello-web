@@ -5,19 +5,33 @@ export type ToolCall = {
   name: string;
   arguments: string;
   result?: string;
-  resultSummary?: string; // p.ej. "3 resultados" / "consultado"
+  resultSummary?: string;
+};
+export type AgentStep = {
+  id: string;
+  agent: string;
+  role: string;
+  status: "thinking" | "tool" | "handoff" | "done";
+  text?: string;
+  tool?: string;
+  toolInput?: any;
+  toolSummary?: string;
+  to?: string;
+  ts: number;
 };
 export type ChatMessage = {
   id: string;
   role: ChatRole;
   content: string;
   tools?: ToolCall[];
+  agents?: AgentStep[];
   ts: number;
 };
+export type ModuleKey = "asistente" | "auditor" | "economia";
 export type Conversation = {
   id: string;
   title: string;
-  module: "asistente" | "auditor";
+  module: ModuleKey;
   messages: ChatMessage[];
   createdAt: number;
   updatedAt: number;
