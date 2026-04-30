@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
         type: "function",
         function: {
           name: "web_search",
-          description: "Busca en la web (DuckDuckGo) y devuelve URLs y snippets relevantes. Usalo cuando no sepas qué URL específica abrir.",
+          description: "Busca en la web (Brave Search, fallback DuckDuckGo) y devuelve URLs + snippets. Úsalo SIEMPRE primero cuando necesites datos actuales (precios, requisitos, leyes, contratos).",
           parameters: {
             type: "object",
             properties: {
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+        messages: [{ role: "system", content: sysContent }, ...messages],
         tools,
         stream: true,
       }),
