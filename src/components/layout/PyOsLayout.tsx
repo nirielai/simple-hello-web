@@ -78,7 +78,20 @@ export default function PyOsLayout({
               </Button>
             </div>
             <div className="flex-1 overflow-y-auto px-2 pb-4">
-              <p className="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Historial</p>
+              <div className="flex items-center justify-between px-2 py-1.5">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Historial</p>
+                {conversations.length > 0 && onClearAll && (
+                  <button
+                    onClick={() => {
+                      if (confirm(`¿Borrar todas las conversaciones (${conversations.length})? No se puede deshacer.`)) onClearAll();
+                    }}
+                    className="text-[10px] text-muted-foreground hover:text-destructive"
+                    title="Borrar todo el historial"
+                  >
+                    borrar todo
+                  </button>
+                )}
+              </div>
               {conversations.length === 0 ? (
                 <p className="px-2 py-2 text-xs text-muted-foreground">Aún no hay conversaciones.</p>
               ) : (
