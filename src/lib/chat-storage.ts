@@ -51,7 +51,7 @@ export function saveConversations(module: string, list: Conversation[]) {
   try { localStorage.setItem(KEY(module), JSON.stringify(list)); } catch {}
 }
 
-export function newConversation(module: "asistente" | "auditor"): Conversation {
+export function newConversation(module: ModuleKey): Conversation {
   return {
     id: crypto.randomUUID(),
     title: "Nueva conversación",
@@ -60,6 +60,10 @@ export function newConversation(module: "asistente" | "auditor"): Conversation {
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
+}
+
+export function clearAllConversations(module: string) {
+  saveConversations(module, []);
 }
 
 export function upsertConversation(module: string, conv: Conversation) {
