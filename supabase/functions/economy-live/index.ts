@@ -155,8 +155,8 @@ Deno.serve(async (req) => {
   if (action === "advisor" && req.method === "POST") {
     try {
       const { question, profile, rates, memory } = await req.json();
-      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurado");
+      const PY_OS = Deno.env.get("PY_OS");
+      if (!PY_OS) throw new Error("PY_OS no configurado");
 
       const ratesCtx = rates?.length
         ? rates.map((r: any) => `- ${r.code} (${r.name}): compra ₲${r.buy?.toLocaleString("es-PY")} / venta ₲${r.sell?.toLocaleString("es-PY")}`).join("\n")
@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
 
       const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${PY_OS}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages: [
@@ -175,7 +175,7 @@ Deno.serve(async (req) => {
         }),
       });
       if (r.status === 429) return new Response(JSON.stringify({ error: "Demasiadas consultas." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (r.status === 402) return new Response(JSON.stringify({ error: "Sin créditos Lovable AI." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (r.status === 402) return new Response(JSON.stringify({ error: "Sin créditos PY-OS AI." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       if (!r.ok) {
         console.error("advisor gw err", r.status, await r.text());
         return new Response(JSON.stringify({ error: "Error gateway IA" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -191,8 +191,8 @@ Deno.serve(async (req) => {
   if (action === "predict" && req.method === "POST") {
     try {
       const { code, history } = await req.json();
-      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurado");
+      const PY_OS = Deno.env.get("PY_OS");
+      if (!PY_OS) throw new Error("PY_OS no configurado");
 
       const PROMPT = `Datos históricos recientes de ${code}/PYG (últimos puntos, más antiguos primero):
 ${history.map((h: any, i: number) => `${i + 1}. ${new Date(h.at).toLocaleString("es-PY")} → mid ₲${h.mid}`).join("\n")}
@@ -206,7 +206,7 @@ Máximo 150 palabras, markdown.`;
 
       const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${PY_OS}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages: [{ role: "user", content: PROMPT }],

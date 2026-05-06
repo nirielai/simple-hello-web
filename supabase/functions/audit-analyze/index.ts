@@ -35,14 +35,14 @@ Deno.serve(async (req) => {
   try {
     const { text, filename } = await req.json();
     if (!text) throw new Error("text requerido");
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurado");
+    const PY_OS = Deno.env.get("PY_OS");
+    if (!PY_OS) throw new Error("PY_OS no configurado");
 
     const userMsg = `Documento: ${filename || "sin nombre"}\n\n--- TEXTO EXTRAÍDO ---\n${text.slice(0, 25000)}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${PY_OS}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-pro",
         messages: [{ role: "system", content: SYSTEM }, { role: "user", content: userMsg }],
@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Demasiadas consultas." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     if (response.status === 402) {
-      return new Response(JSON.stringify({ error: "Sin créditos Lovable AI." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Sin créditos PY-OS AI." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     if (!response.ok) {
       console.error("audit-analyze gw error", response.status, await response.text());

@@ -32,8 +32,8 @@ Deno.serve(async (req) => {
 
   try {
     const { messages, memory } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurado");
+    const PY_OS = Deno.env.get("PY_OS");
+    if (!PY_OS) throw new Error("PY_OS no configurado");
 
     const sysContent = memory && typeof memory === "string" && memory.trim()
       ? `${SYSTEM_PROMPT}\n\nMEMORIA DEL USUARIO (de conversaciones previas, usala con criterio y no la repitas literalmente):\n${memory}`
@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${PY_OS}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [{ role: "system", content: sysContent }, ...messages],
@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
       });
     }
     if (response.status === 402) {
-      return new Response(JSON.stringify({ error: "Sin créditos en Lovable AI. Cargá créditos en Settings → Workspace → Usage." }), {
+      return new Response(JSON.stringify({ error: "Sin créditos en PY-OS AI. Cargá créditos en Settings → Workspace → Usage." }), {
         status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
